@@ -63,7 +63,7 @@ mysql -uroot -p
 mysql 命令路径为 /usr/local/mysql/bin/mysql，设置环境变量，这样在任何目录下就都可以访问 mysql 了， 参考：[mysql基本操作](http://www.zuo11.com/blog/2016/10/db_mysql_basecmd.html)
 
 
-## 前端 vue3+ts
+## 后台管理系统 vue3+ts
 脚手架 https://cli.vuejs.org/guide/installation.html
 ```js
 npm install -g @vue/cli
