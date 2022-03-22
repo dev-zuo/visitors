@@ -3,9 +3,9 @@ web ua/pa statistics
 
 从 0 到 1 写一个类似百度统计的轮子
 
-前端上报用原生 js
-后台管理系统用 Vue3 + TS + Vite
-服务端 Nest.js + mysql
+- 前端上报用原生 js
+- 后台管理系统用 Vue3 + TS + `@vue/cli`
+- 服务端 Nest.js + mysql
 
 ## 使用场景
 在页面中引入一个 js，初始化即可完成上报
