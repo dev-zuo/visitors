@@ -7,6 +7,8 @@ web ua/pa statistics
 - 后台管理系统用 Vue3 + TS + `@vue/cli`
 - 服务端 Nest.js + mysql
 
+![百度统计](./docs/百度统计.png)
+
 ## 使用场景
 在页面中引入一个 js，初始化即可完成上报
 
@@ -45,14 +47,28 @@ navigator.sendBeacon('/user', `{ page: '/xxx', duration: '12s' }`)
 ### 服务端 nest.js 
 [nest.js](https://docs.nestjs.com/) 技术调研，[Nest.js 和 koa 有什么不一样？](https://www.zhihu.com/question/323525252)
 
-koa 是渐进式的，很多都依赖其他库，需要手动引入
-nest.js 支持 ts，可以很好的发挥装饰器的优势，功能集中，很多功能帮你集成好了，脚手架创建时自带 eslint,prettier,jest,git等（需要更多的学习成本）
+- koa 是渐进式的，很多都依赖其他库，需要手动引入
+- nest.js 支持 ts，可以很好的发挥装饰器的优势，功能集中，很多功能帮你集成好了，脚手架创建时自带 eslint,prettier,jest,git等（需要更多的学习成本）
 
 ```js
 sudo npm i -g @nestjs/cli 
 nest new statistics-server
 ```
 由于我们这里同一仓库下有两个项目前端、后端，所以需要进入 statistics-server 目录 rm -rf .git 删掉脚手架生成的 git
+
+### 静态服务(统计 js、上报 gif)
+nest 利用 express 开启静态服务，将上报的 js 文件，gif 图放到 public 目录
+
+- 1.页面引入统计代码
+- 2.加载 js 文件
+  - 2.1 js 文件监听 load 事件，收集数据并上报(通过 gif params 传参)
+  - 2.2 前端上报数据分三种: UA（用户信息，减少服务器压力，前端处理，参考: [ua笔记](http://fe.zuo11.com/js/ad3/js-ad3-13.html)）、性能（[performance.timing](http://www.zuo11.com/blog/2020/12/performance-timing.html)、[js高程4相关](http://fe.zuo11.com/js/ad3/js-ad3-20.html#%E8%AE%A1%E6%97%B6-api-performace%E6%80%A7%E8%83%BD))、错误收集(参考：[错误处理](http://fe.zuo11.com/js/ad3/js-ad3-21.html))
+- 3.服务端 nest.js 获取参数，并持久化数据，这里服务端也需要收集部分信息：IP、IP归属地（可用于地域统计，用于屏蔽恶意 IP 爬虫、骚扰）、宽带类型、origin/host 同源检测、页面跳转还是直接访问：Referer、UA,PV,页面怎么计算
+
+  ![jianshu_console_performance.png](./docs/jianshu_console_performance.png)
+
+> performance.timing 即将废弃，需要替换为 PerformanceNavigationTiming，当前处于实验性阶段，兼容性还可以，后面抽空研究下
+
 ### mysql
 安装 mysql，root/abc123456! 安装完成后，测试
 
@@ -62,6 +78,10 @@ mysql -uroot -p
 
 mysql 命令路径为 /usr/local/mysql/bin/mysql，设置环境变量，这样在任何目录下就都可以访问 mysql 了， 参考：[mysql基本操作](http://www.zuo11.com/blog/2016/10/db_mysql_basecmd.html)
 
+create database zuo_statistics;
+use zuo_statistics;
+
+create table tb_user (id int auto_increment primary key,user varchar(100) comment "用户名",passwd varchar(100) comment "密码") comment "用户表"; // 创建数据表，要指定id，primary key 
 
 ## 后台管理系统 vue3+ts
 脚手架 https://cli.vuejs.org/guide/installation.html
