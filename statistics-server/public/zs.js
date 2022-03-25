@@ -64,7 +64,7 @@ function report(params) {
   // var img = new Image(1, 1)
   let str = JSON.stringify(params)
   console.log('【cccc】', params, str, encodeURIComponent(str),str.length )
-  img.src = 'http://127.0.0.1:3000/zs.gif?data=' + encodeURIComponent(str);
+  img.src = 'http://zuo11.com:3000/zs.gif?data=' + encodeURIComponent(str);
   img.onload = function () {
     console.log('资源加载成功')
   }
