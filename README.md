@@ -78,10 +78,78 @@ mysql -uroot -p
 
 mysql 命令路径为 /usr/local/mysql/bin/mysql，设置环境变量，这样在任何目录下就都可以访问 mysql 了， 参考：[mysql基本操作](http://www.zuo11.com/blog/2016/10/db_mysql_basecmd.html)
 
+```sql
 create database zuo_statistics;
 use zuo_statistics;
+-- - id 主键
 
-create table tb_user (id int auto_increment primary key,user varchar(100) comment "用户名",passwd varchar(100) comment "密码") comment "用户表"; // 创建数据表，要指定id，primary key 
+-- - ip
+-- - region 地域
+-- - 宽带运营商
+-- - count 该 ip 的第几次访问
+-- - referer 来源，判断是否是直接访问
+
+-- - perf_load
+-- _ perf_dom_content_loaded
+-- - perf_ttfb Time To First Byte
+-- - performance.timing 完整信息
+-- - perf.calcData 计算后的性能数据
+
+-- - ua   navigator.userAgent
+-- - uaInfo 转换后的 ua 信息
+-- - isMobile 是否是移动端
+-- - platform 使用 navigator.platform
+-- - language 语言 navigator.language
+-- - hardwareConcurrency cpu核心/线程
+-- - deviceMemory 内存
+-- - cookie 是否开启 cookie, navigator.cookieEnabled
+-- - network 网络情况
+
+-- - url 完整链接  location.href
+-- - pathname 路径（用于计算访问量）不会包含 search 查询字段 
+
+-- - screen 分辨率
+-- - screen_info 分辨率、dpr设备像素比、颜色深度
+
+-- - 访问时间
+-- - extra1
+-- - extra2
+-- - extra3
+
+create table base (
+  id int auto_increment primary key,
+  ip varchar(20) default '',
+  region varchar(50) default '',
+  networkServe varchar(10) default '',
+  count int default 1,
+  referer varchar(256) default '',
+  perf_load varchar(20) default '', 
+  perf_dom_content_loaded varchar(20) default '',
+  perf_ttfb varchar(20) default '',
+  performance_timing text,
+  perf_calcData varchar(200) default '',
+  ua varchar(200) default '',
+  uaInfo varchar(200) default '',
+  isMobile boolean default 0,
+  platform varchar(20) default '',
+  lang varchar(20) default '',
+  hardware_concurrency int default 0,
+  deviceMemory int default 0,
+  cookieEnabled boolean default 0,
+  network varchar(10) default '',
+  href varchar(300) default '',
+  pathname varchar(100) default '',
+  screen varchar(20) default '',
+  screen_info varchar(50) default '',
+  time timestamp default current_timestamp,
+  extra1 varchar(100) default "",
+  extra2 varchar(100) default "",
+  extra3 varchar(100) default ""
+);
+show tables;
+-- insert into base (href,lang) values ('/home', 'ch');
+select * from tb_access;
+```
 
 ## 后台管理系统 vue3+ts
 脚手架 https://cli.vuejs.org/guide/installation.html

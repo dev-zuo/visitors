@@ -61,12 +61,18 @@ window.addEventListener('error', (message, url, line) => {
 // 上报 js
 function report(params) {
   var img = document.createElement('img')
-
+  // var img = new Image(1, 1)
   let str = JSON.stringify(params)
-    console.log(params, str, encodeURIComponent(str),str.length )
+  console.log('【cccc】', params, str, encodeURIComponent(str),str.length )
   img.src = 'http://127.0.0.1:3000/zs.gif?data=' + encodeURIComponent(str);
-  document.body.appendChild(img)
+  img.onload = function () {
+    console.log('资源加载成功')
+  }
 }
+
+window.addEventListener('unload', (event) => {
+  navigator.sendBeacon('/base/pageUnload', `{"page": "/xxx", "duration": "12s" }`)
+})
 
 window.addEventListener('load', (event) => {
   console.log('onload')
@@ -84,6 +90,7 @@ window.addEventListener('load', (event) => {
     var reportData = {
       perf: performance,
       href: location.href,
+      pathname: location.pathname,
       navData: navData,
       screen: {
         size: screen.width + 'x' + screen.height,
@@ -91,7 +98,6 @@ window.addEventListener('load', (event) => {
         colorDepth: screen.colorDepth // 屏幕颜色：24-bit
       },
       network: navigator.connection.effectiveType,
-      netRtt: navigator.connection.rtt,
     }
     report(reportData)
   }, 0)
