@@ -55,7 +55,7 @@ export class BaseService {
             ip = ip.substr(7)
           }
           try {
-            let res = await httpServiceCopy.get('http://whois.pconline.com.cn/ipJson.jsp?ip=113.77.241.119&json=true', {
+            let res = await httpServiceCopy.get('http://whois.pconline.com.cn/ipJson.jsp?ip=' + ip + '&json=true', {
               responseType: "arraybuffer" 
             }).toPromise();
             ipInfo = iconvLite.decode(res.data, 'gbk'); 
