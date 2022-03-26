@@ -43,9 +43,10 @@ export class BaseService {
         try {
           let data = JSON.parse(req.query.data) // zs.gif?data={a:1,b:2}
           console.log('data', data)
-          let {perf, href, navData, screen, network,pathname} = data
+          let {perf, href, navData, screen, network,pathname, referrer} = data
           // IP、IP归属地（可用于地域统计，用于屏蔽恶意 IP 爬虫、骚扰）、宽带类型、origin/host 同源检测、页面跳转还是直接访问：Referer、UA,PV,页面怎么计算
           let { referer, 'user-agent': ua, origin } = req.headers
+          // referrer
           let uaObj = UaParser(ua);
           uaObj.ua = ""
           const access = new  Base();
@@ -69,7 +70,7 @@ export class BaseService {
             region: ipInfo.addr || '', // 请求接口获取
             networkServe: ipInfo.addr || '', // 请求接口获取
             count: 0, // 第几次访问
-            referer,
+            referer: referrer,
 
             perf_load: perf.calcData.Loaded,
             perf_dom_content_loaded: perf.calcData.DOMContentLoaded,

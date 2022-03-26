@@ -98,6 +98,7 @@ window.addEventListener('load', (event) => {
         colorDepth: screen.colorDepth // 屏幕颜色：24-bit
       },
       network: navigator.connection.effectiveType,
+      referrer: document.referrer
     }
     report(reportData)
   }, 0)

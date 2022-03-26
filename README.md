@@ -24,6 +24,16 @@ var _hmt = _hmt || [];
   s.parentNode.insertBefore(hm, s);
 })();
 </script>
+
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "http://zuo11.com:3000/zs.js?183281668cc3440449274d1f93c04de6";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
 ```
 
 分析百度统计的上报流程，script 标签动态加载 hm.js 文件(参见 test/hm.js)，然后这个 js 会通过创建 1x1 的 gif 图片来发送 get 请求上报信息？
@@ -120,7 +130,7 @@ create table base (
   id int auto_increment primary key,
   ip varchar(20) default '',
   region varchar(50) default '',
-  networkServe varchar(10) default '',
+  networkServe varchar(50) default '',
   count int default 1,
   referer varchar(256) default '',
   perf_load varchar(20) default '', 
@@ -129,7 +139,7 @@ create table base (
   performance_timing text,
   perf_calcData varchar(200) default '',
   ua varchar(200) default '',
-  uaInfo varchar(200) default '',
+  uaInfo varchar(300) default '',
   isMobile boolean default 0,
   platform varchar(20) default '',
   lang varchar(20) default '',
@@ -158,3 +168,31 @@ npm install -g @vue/cli
 vue create statistics-fe
 ```
 
+## 快捷命令
+select id,ip,region,ua,screen,time from base;
+## 问题记录
+### 当前统计数据比百度统计数据少很多
+查看 pm2 log --lines 1000
+#### 排查错误记录，针对性修复
+1、sqlMessage: 'Data too long for column \'networkServe\' at row 1',
+香港 城市电讯有限公司 / 北京市海淀区 联通ADSL
+| region                  | varchar(50)  | YES  |     |                   |                   |
+| networkServe            | varchar(10)  | YES  |     |                   |                   |
+解决方法，networkServe 字段改为 50，mysql 命令如下
+```sql
+alter table base change networkServe networkServe varchar(50) default ''; 
+```
+2、'Data too long for column \'uaInfo\' at row 1'
+'{"ua":"","browser":{"name":"Edge","version":"99.0.1150.52","major":"99"},"engine":{"name":"Blink","version":"99.0.4844.74"},"os":{"name":"Windows","version":"10"},"device":{},"cpu":{"architecture":"amd64"}}'.length
+206 长度
+```sql
+alter table base change uaInfo uaInfo varchar(300) default ''; 
+```
+3、来源信息都是 referer: 'http://www.zuo11.com/'
+- 同样的一条记录百度统计里面有来源信息，包含搜索关键字，但我们这里来源确是 zuo11.com
+- 百度统计在前端获取的，而不是后端，后端请求头获取不到。
+- document.referrer
+- 新窗口打开时怎么保持 chorme F12 面板一直开着 https://www.jianshu.com/p/fd5ff7a19346
+
+#### 错误 log 统一记录到一个位置
+使用 log4js
