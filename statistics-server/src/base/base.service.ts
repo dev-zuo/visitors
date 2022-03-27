@@ -1,4 +1,4 @@
-import { Injectable, Res, HttpStatus } from '@nestjs/common';
+import { Injectable, Res, HttpStatus, Req, Query } from '@nestjs/common';
 import { Request, Response } from 'express';
 import * as UaParser from 'ua-parser-js'
 import isMobile from 'ismobilejs';
@@ -26,6 +26,19 @@ export class BaseService {
     // static 方法拿不到 this，main.ts 全局拦截又需要 static
     baseRepositoryCopy = baseRepository
     httpServiceCopy = httpService
+  }
+
+  async findAccess(@Res() res: Response, @Req() req: Request, @Query() query) {
+    console.log(query)
+    let result: Base[] = await baseRepositoryCopy.find();
+    res.status(HttpStatus.OK).json({
+      code: 0,
+      data: {
+        list: result,
+        total: result.length
+      },
+      msg: '请求成功!'
+    });
   }
 
   saveAccessData(@Res() res: Response) {

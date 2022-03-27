@@ -22,6 +22,8 @@ async function bootstrap() {
   app.use(express.text()); 
   // 开启静态服务
   app.useStaticAssets(join(__dirname, '..', 'public'));
+  // 允许跨域
+  app.enableCors()
 
   await app.listen(3000);
 }
