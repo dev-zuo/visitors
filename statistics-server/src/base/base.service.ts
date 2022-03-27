@@ -10,8 +10,12 @@ import { Base } from './base.entity';
 import { HttpService } from '@nestjs/axios';
 import * as iconvLite from 'iconv-lite';
 
+import { logger } from '../utils/logger'
+
 let baseRepositoryCopy = null
 let httpServiceCopy = null
+const log = logger('base')
+
 @Injectable()
 export class BaseService {
   constructor(
@@ -36,13 +40,14 @@ export class BaseService {
   static gifReportHandler() {
     // console.log(this.accessRepository)
     return async (req, res, next) => {
-      console.log(`Request..., ${req.path},${JSON.stringify(req.query)}`);
+      log.info(`Request..., ${req.path},${JSON.stringify(req.query)}`);
       // 前端触发了上报
+      log.info('[req.body]', req.body)
       console.log('[req.body]', req.body)
       if (req.path === '/zs.gif') {
         try {
           let data = JSON.parse(req.query.data) // zs.gif?data={a:1,b:2}
-          console.log('data', data)
+          log.info('data', data)
           let {perf, href, navData, screen, network,pathname, referrer} = data
           // IP、IP归属地（可用于地域统计，用于屏蔽恶意 IP 爬虫、骚扰）、宽带类型、origin/host 同源检测、页面跳转还是直接访问：Referer、UA,PV,页面怎么计算
           let { referer, 'user-agent': ua, origin } = req.headers
@@ -61,9 +66,9 @@ export class BaseService {
             }).toPromise();
             ipInfo = iconvLite.decode(res.data, 'gbk'); 
             ipInfo = JSON.parse(ipInfo)
-            console.log('res', ipInfo) 
+            log.info('res', ipInfo) 
           } catch(e) {
-            console.error(e)
+            log.error(e)
           }
          Object.assign(access, {
             ip: ip,
@@ -92,14 +97,15 @@ export class BaseService {
             screen: screen.size,
             screen_info: JSON.stringify(screen),
           })
-          console.log(access)
+          log.info(access)
       
           let result: Base = await baseRepositoryCopy.save(access);
           // console.log('xxx', result)
           // let  access: Base[] = await baseRepositoryCopy.find();
           // console.log('access', access)
         } catch (e) {
-          console.error(e)
+          log.error(e.message)
+          console.log(e)
           // nginx zuo11.com/statistics/zs.js => zuo1.com:3000
         }
       }

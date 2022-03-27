@@ -170,6 +170,8 @@ vue create statistics-fe
 
 ## 快捷命令
 select id,ip,region,ua,screen,time from base;
+select id,ip,region,screen,time,referer from base;
+select id,ip,region,screen,time,referer from base where DATE_FORMAT(time, '%Y%m%d') = '20220327';
 ## 问题记录
 ### 当前统计数据比百度统计数据少很多
 查看 pm2 log --lines 1000
@@ -194,5 +196,9 @@ alter table base change uaInfo uaInfo varchar(300) default '';
 - document.referrer
 - 新窗口打开时怎么保持 chorme F12 面板一直开着 https://www.jianshu.com/p/fd5ff7a19346
 
+4、 sqlMessage: 'Data too long for column \'screen_info\' at row 1',
+'{"size":"2066x1162","dpr":1.2395833730697632,"colorDepth":24}'
+限制 50 => 100
+alter table base change screen_info screen_info varchar(100) default ''; 
 #### 错误 log 统一记录到一个位置
 使用 log4js
