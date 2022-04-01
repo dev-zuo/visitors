@@ -1,5 +1,5 @@
-import  * as  log4js from 'log4js';
-import {loggerConfig} from './loggerConfig'
+import * as log4js from 'log4js';
+import { loggerConfig } from './loggerConfig';
 
 log4js.configure(loggerConfig);
 

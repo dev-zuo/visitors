@@ -5,7 +5,7 @@ export class Base {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({default: ''})
+  @Column({ default: '' })
   ip: string;
 
   @Column()
@@ -40,8 +40,8 @@ export class Base {
 
   @Column()
   uaInfo: string;
-  
-  @Column({ default: false})
+
+  @Column({ default: false })
   isMobile: boolean;
 
   @Column()
@@ -73,7 +73,7 @@ export class Base {
 
   @Column()
   screen_info: string;
-  
+
   @Column()
   time: string;
 
