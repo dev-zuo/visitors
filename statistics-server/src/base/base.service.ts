@@ -2,8 +2,8 @@ import { Injectable, Res, HttpStatus, Req, Query } from '@nestjs/common';
 import { Request, Response } from 'express';
 import * as UaParser from 'ua-parser-js';
 import isMobile from 'ismobilejs';
-
-import { InjectRepository } from '@nestjs/typeorm';
+import { EntityManager } from 'typeorm';
+import { InjectRepository, InjectEntityManager } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Base } from './base.entity';
 
@@ -15,12 +15,15 @@ import { logger } from '../utils/logger';
 let baseRepositoryCopy = null;
 let httpServiceCopy = null;
 const log = logger('base');
+const logErrorStack = logger('errorStack');
 
 @Injectable()
 export class BaseService {
   constructor(
     @InjectRepository(Base)
     private readonly baseRepository: Repository<Base>,
+    @InjectEntityManager('default')
+    private entityManager: EntityManager,
     private httpService: HttpService,
   ) {
     // static 方法拿不到 this，main.ts 全局拦截又需要 static
@@ -29,13 +32,25 @@ export class BaseService {
   }
 
   async findAccess(@Res() res: Response, @Req() req: Request, @Query() query) {
-    console.log(query);
-    const result: Base[] = await baseRepositoryCopy.find();
+    log.info(query);
+    const { pageIndex = 1, pageCount = 20 } = query;
+    const result: Base[] = await this.baseRepository.find({
+      order: {
+        time: 'DESC',
+      },
+      skip: (pageIndex - 1) * pageCount,
+      take: pageCount,
+    });
+
+    const [totalResult] = await this.entityManager.query(
+      `SELECT COUNT(*) as total FROM base`,
+    );
+    log.info(totalResult.total);
     res.status(HttpStatus.OK).json({
       code: 0,
       data: {
         list: result,
-        total: result.length,
+        total: totalResult.total - 0,
       },
       msg: '请求成功!',
     });
@@ -91,7 +106,8 @@ export class BaseService {
             ipInfo = JSON.parse(ipInfo);
             log.info('res', ipInfo);
           } catch (e) {
-            log.error(e);
+            log.error(e.message);
+            logErrorStack.info(e);
           }
           Object.assign(access, {
             ip: ip,

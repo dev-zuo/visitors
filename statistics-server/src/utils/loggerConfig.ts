@@ -21,9 +21,16 @@ export const loggerConfig = {
       level: 'ERROR',
       appender: 'errorFile',
     },
+    errorStack: {
+      type: 'dateFile',
+      filename: 'log/errorsStack.log',
+      pattern: '-yyyy-MM-dd',
+      category: 'http',
+    },
   },
   categories: {
     default: { appenders: ['app', 'errors'], level: 'DEBUG' },
     http: { appenders: ['access'], level: 'DEBUG' },
+    errorStack: { appenders: ['errorStack'], level: 'DEBUG' },
   },
 };
