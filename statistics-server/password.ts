@@ -1,1 +1,1 @@
-export const PASSWORD = 'Abc123456!';
+export const PASSWORD = 'Abc12';
