@@ -1,4 +1,5 @@
 # zuo-statistics
+
 web ua/pa statistics
 
 从 0 到 1 写一个类似百度统计的轮子
@@ -10,6 +11,7 @@ web ua/pa statistics
 ![百度统计](./docs/百度统计.png)
 
 ## 使用场景
+
 在页面中引入一个 js，初始化即可完成上报
 
 下面是百度统计的引用示例
@@ -54,7 +56,9 @@ navigator.sendBeacon('/user', `{ page: '/xxx', duration: '12s' }`)
 ```
 
 ## 服务端
-### 服务端 nest.js 
+
+### 服务端 nest.js
+
 [nest.js](https://docs.nestjs.com/) 技术调研，[Nest.js 和 koa 有什么不一样？](https://www.zhihu.com/question/323525252)
 
 - koa 是渐进式的，很多都依赖其他库，需要手动引入
@@ -64,9 +68,11 @@ navigator.sendBeacon('/user', `{ page: '/xxx', duration: '12s' }`)
 sudo npm i -g @nestjs/cli 
 nest new statistics-server
 ```
+
 由于我们这里同一仓库下有两个项目前端、后端，所以需要进入 statistics-server 目录 rm -rf .git 删掉脚手架生成的 git
 
 ### 静态服务(统计 js、上报 gif)
+
 nest 利用 express 开启静态服务，将上报的 js 文件，gif 图放到 public 目录
 
 - 1.页面引入统计代码
@@ -80,9 +86,10 @@ nest 利用 express 开启静态服务，将上报的 js 文件，gif 图放到 
 > performance.timing 即将废弃，需要替换为 PerformanceNavigationTiming，当前处于实验性阶段，兼容性还可以，后面抽空研究下
 
 ### mysql
+
 安装 mysql，root/abc123456! 安装完成后，测试
 
-mysql -uroot -p 
+mysql -uroot -p
 
 需要设置环境变量，在系统偏好这种里面找到最下面的 mysql 然后点击去，configuration 中可以看到 mysql 安装的路径
 
@@ -162,43 +169,62 @@ select * from tb_access;
 ```
 
 ## 后台管理系统 vue3+ts
-脚手架 https://cli.vuejs.org/guide/installation.html
+
+脚手架 <https://cli.vuejs.org/guide/installation.html>
+
 ```js
 npm install -g @vue/cli
 vue create statistics-fe
 ```
 
 ## 快捷命令
+
 select id,ip,region,ua,screen,time from base;
 select id,ip,region,screen,time,referer from base;
 select id,ip,region,screen,time,referer from base where DATE_FORMAT(time, '%Y%m%d') = '20220327';
+
 ## 问题记录
+
 ### 当前统计数据比百度统计数据少很多
+
 查看 pm2 log --lines 1000
+
 #### 排查错误记录，针对性修复
+
 1、sqlMessage: 'Data too long for column \'networkServe\' at row 1',
 香港 城市电讯有限公司 / 北京市海淀区 联通ADSL
 | region                  | varchar(50)  | YES  |     |                   |                   |
 | networkServe            | varchar(10)  | YES  |     |                   |                   |
 解决方法，networkServe 字段改为 50，mysql 命令如下
+
 ```sql
 alter table base change networkServe networkServe varchar(50) default ''; 
 ```
+
 2、'Data too long for column \'uaInfo\' at row 1'
 '{"ua":"","browser":{"name":"Edge","version":"99.0.1150.52","major":"99"},"engine":{"name":"Blink","version":"99.0.4844.74"},"os":{"name":"Windows","version":"10"},"device":{},"cpu":{"architecture":"amd64"}}'.length
 206 长度
+
 ```sql
 alter table base change uaInfo uaInfo varchar(300) default ''; 
 ```
+
 3、来源信息都是 referer: 'http://www.zuo11.com/'
+
 - 同样的一条记录百度统计里面有来源信息，包含搜索关键字，但我们这里来源确是 zuo11.com
 - 百度统计在前端获取的，而不是后端，后端请求头获取不到。
 - document.referrer
-- 新窗口打开时怎么保持 chorme F12 面板一直开着 https://www.jianshu.com/p/fd5ff7a19346
+- 新窗口打开时怎么保持 chorme F12 面板一直开着 <https://www.jianshu.com/p/fd5ff7a19346>
 
 4、 sqlMessage: 'Data too long for column \'screen_info\' at row 1',
 '{"size":"2066x1162","dpr":1.2395833730697632,"colorDepth":24}'
 限制 50 => 100
-alter table base change screen_info screen_info varchar(100) default ''; 
+alter table base change screen_info screen_info varchar(100) default '';
+
+5、ua/referer 都加到 500
+alter table base change referer referer varchar(500) default '';
+alter table base change ua ua varchar(500) default '';
+
 #### 错误 log 统一记录到一个位置
+
 使用 log4js
