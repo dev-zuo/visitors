@@ -8,7 +8,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 // import { Base } from './base/base.entity'
 import { BaseModule } from './base/base.module';
 // import { Connection } from 'typeorm';
-import { PASSWORD } from '../password';
+import { PASSWORD } from './config/password';
 @Module({
   imports: [
     TypeOrmModule.forRoot({
