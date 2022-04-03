@@ -144,7 +144,7 @@ export class BaseService {
           // console.log('access', access)
         } catch (e) {
           log.error(e.message);
-          log.error(e);
+          logErrorStack.error(e);
           console.log(e);
           // nginx zuo11.com/statistics/zs.js => zuo1.com:3000
         }

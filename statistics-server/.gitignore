@@ -3,6 +3,7 @@
 /node_modules
 
 # Logs
+log/*
 logs
 *.log
 npm-debug.log*
@@ -35,4 +36,7 @@ lerna-debug.log*
 !.vscode/extensions.json
 
 # 防止服务器 git pull 冲突
+# 构建后的统计代码，生产环境和开发环境生成的不一样，防止自动化部署报错，需要 ignore
 zs.js
+# password 闭源
+pasword.ts

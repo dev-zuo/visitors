@@ -8,7 +8,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 // import { Base } from './base/base.entity'
 import { BaseModule } from './base/base.module';
 // import { Connection } from 'typeorm';
-
+import { PASSWORD } from '../password';
 @Module({
   imports: [
     TypeOrmModule.forRoot({
@@ -16,7 +16,7 @@ import { BaseModule } from './base/base.module';
       host: 'localhost',
       port: 3306,
       username: 'root',
-      password: 'Abc123456!',
+      password: PASSWORD,
       database: 'zuo_statistics',
       // entities: [Base],
       autoLoadEntities: true,
