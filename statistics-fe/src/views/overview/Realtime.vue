@@ -78,8 +78,8 @@ const useTableData = () => {
 
   const findAccess = async () => {
     try {
-      // const res = await axios.get("http://zuo11.com:3000/base/access", {
-      const res = await axios.get("http://127.0.0.1:3000/base/access", {
+      const res = await axios.get("http://zuo11.com:3000/base/access", {
+        // const res = await axios.get("http://127.0.0.1:3000/base/access", {
         params: params.value,
       });
       console.log(res);
