@@ -9,18 +9,51 @@
       @size-change="handleSizeChange"
       @current-change="handleCurrentChange"
     />
-    <el-table :data="tableData.list" style="width: 100%; overflow: scroll">
-      <el-table-column prop="time" label="访问时间">
+    <el-table :data="tableData.list" style="width: 100%; overflow: auto">
+      <el-table-column type="expand">
+        <template #default="scope">
+          <RealTimeDetail :row="scope.row" />
+        </template>
+      </el-table-column>
+      <el-table-column label="No." width="60">
+        <template #default="scope">
+          <span class="ellipsis-text" :title="(currentPage - 1) * pageSize + scope.$index + 1">
+            {{ (currentPage - 1) * pageSize + scope.$index + 1 }}
+          </span>
+        </template>
+      </el-table-column>
+      <el-table-column prop="time" label="访问时间" width="136">
         <template #default="scope">
           {{ new Date(scope.row.time).toLocaleString() }}
         </template>
       </el-table-column>
-      <el-table-column prop="region" label="地域" />
-      <!-- <el-table-column prop="referer" label="来源" /> -->
-      <el-table-column prop="href" label="入口页面" />
+      <el-table-column prop="region" label="地域" width="100" :show-overflow-tooltip="true">
+        <template #default="scope">
+          {{ scope.row.region?.split(" ")[0] || "-" }}
+        </template>
+      </el-table-column>
+      <el-table-column prop="referer" label="来源" width="100">
+        <template #default="scope">
+          <span v-if="!scope.row.referer">直接访问</span>
+          <a v-else :href="scope.row.referer" target="_blank" class="ellipsis-text" :title="scope.row.referer">
+            <span>{{ getRefererSimple(scope.row.referer) }}</span>
+          </a>
+        </template>
+      </el-table-column>
+
+      <el-table-column prop="href" label="入口页面">
+        <template #default="scope">
+          <a v-if="getSimpleHref(scope.row.href)" :href="scope.row.href" target="_blank">
+            {{ getSimpleHref(scope.row.href) }}
+          </a>
+        </template>
+      </el-table-column>
       <el-table-column prop="ip" label="访问ip" />
       <!-- <el-table-column prop="ua" label="ua" /> -->
       <el-table-column prop="screen" label="分辨率" />
+      <el-table-column prop="uid" label="访客 id" />
+      <el-table-column prop="duration" label="访问时长" />
+      <el-table-column prop="pageCount" label="访问页数" />
     </el-table>
   </div>
 </template>
@@ -29,37 +62,72 @@
 import axios from "axios";
 import { computed, onBeforeMount, reactive, ref } from "vue";
 import { ElMessage } from "element-plus";
+import RealTimeDetail from "./RealtimeDetail.vue";
 
 onBeforeMount(() => {
   findAccess();
 });
 
-const params = computed(() => {
-  return {
-    pageIndex: currentPage.value,
-    pageCount: pageSize.value,
-  };
-});
+const useTableData = () => {
+  const params = computed(() => {
+    return {
+      pageIndex: currentPage.value,
+      pageCount: pageSize.value,
+    };
+  });
 
-const findAccess = async () => {
-  try {
-    const res = await axios.get("http://zuo11.com:3000/base/access", {
-      // const res = await axios.get("http://127.0.0.1:3000/base/access", {
-      params: params.value,
-    });
-    console.log(res);
-    tableData.total = res.data?.data?.total || 0;
-    tableData.list = res.data?.data?.list || [];
-  } catch (e) {
-    console.error(e);
-    ElMessage.error((e as Error).message);
-  }
+  const findAccess = async () => {
+    try {
+      // const res = await axios.get("http://zuo11.com:3000/base/access", {
+      const res = await axios.get("http://127.0.0.1:3000/base/access", {
+        params: params.value,
+      });
+      console.log(res);
+      tableData.total = res.data?.data?.total || 0;
+      tableData.list = res.data?.data?.list || [];
+      try {
+        tableData.list = tableData.list.map((item: any) => {
+          item.prefObj = JSON.parse(item.perf_calcData);
+          item.uaObj = JSON.parse(item.uaInfo);
+          item.screenObj = JSON.parse(item.screen_info);
+          return item;
+        });
+      } catch (e) {
+        console.error(e);
+      }
+    } catch (e) {
+      console.error(e);
+      ElMessage.error((e as Error).message);
+    }
+  };
+
+  const getSimpleHref = (href: string) => {
+    const path = href?.split("http://www.zuo11.com")[1];
+    return path === "/" ? href : path;
+  };
+
+  const getRefererSimple = (referer: string) => {
+    if (referer.startsWith("https://www.baidu.com") || referer.startsWith("https://m.baidu.com")) {
+      return "百度";
+    } else if (referer.startsWith("https://www.google.com")) {
+      return "Google";
+    } else {
+      return referer;
+    }
+  };
+
+  return {
+    getSimpleHref,
+    findAccess,
+    getRefererSimple,
+  };
 };
+const { getSimpleHref, findAccess, getRefererSimple } = useTableData();
 
 const usePagination = () => {
   const currentPage = ref(1);
   const pageSize = ref(20);
-  const tableData = reactive({
+  const tableData: any = reactive({
     total: 0,
     list: [],
   });
@@ -80,18 +148,23 @@ const usePagination = () => {
     handleCurrentChange,
   };
 };
-
-const {
-  currentPage,
-  pageSize,
-  tableData,
-  handleSizeChange,
-  handleCurrentChange,
-} = usePagination();
+const { currentPage, pageSize, tableData, handleSizeChange, handleCurrentChange } = usePagination();
 </script>
 
 <style lang="scss" scoped>
 .realtime {
   padding: 20px;
+  a,
+  a:hover {
+    color: #1276e5;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .ellipsis-text {
+    width: 80px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }
 </style>

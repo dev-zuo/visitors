@@ -12,9 +12,7 @@
     </div>
     <footer>
       Powered by
-      <a href="https://github.com/zuoxiaobai/zuo-statistics" target="_blank">
-        zuo-statistics
-      </a>
+      <a href="https://github.com/zuoxiaobai/zuo-statistics" target="_blank"> zuo-statistics </a>
     </footer>
   </div>
 </template>
@@ -22,6 +20,13 @@
 <style lang="scss">
 body {
   margin: 0;
+  font-size: 12px;
+  min-width: 1366px;
+  overflow: auto;
+}
+
+#app .el-table {
+  font-size: 12px;
 }
 
 #app {

@@ -16,18 +16,12 @@ const routes: Array<RouteRecordRaw> = [
       {
         path: "/dashboard",
         name: "dashboard",
-        component: () =>
-          import(
-            /* webpackChunkName: "overview" */ "@/views/overview/Dashboard.vue"
-          ),
+        component: () => import(/* webpackChunkName: "overview" */ "@/views/overview/Dashboard.vue"),
       },
       {
         path: "/realtime",
         name: "realtime",
-        component: () =>
-          import(
-            /* webpackChunkName: "overview" */ "@/views/overview/Realtime.vue"
-          ),
+        component: () => import(/* webpackChunkName: "overview" */ "@/views/overview/Realtime.vue"),
       },
     ],
   },

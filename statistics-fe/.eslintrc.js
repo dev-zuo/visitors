@@ -2,6 +2,7 @@ module.exports = {
   root: true,
   env: {
     node: true,
+    "vue/setup-compiler-macros": true,
   },
   extends: [
     "plugin:vue/vue3-essential",
@@ -20,10 +21,7 @@ module.exports = {
   },
   overrides: [
     {
-      files: [
-        "**/__tests__/*.{j,t}s?(x)",
-        "**/tests/unit/**/*.spec.{j,t}s?(x)",
-      ],
+      files: ["**/__tests__/*.{j,t}s?(x)", "**/tests/unit/**/*.spec.{j,t}s?(x)"],
       env: {
         jest: true,
       },
