@@ -6,11 +6,10 @@ import { EntityManager } from 'typeorm';
 import { InjectRepository, InjectEntityManager } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Base } from './base.entity';
-
 import { HttpService } from '@nestjs/axios';
 import * as iconvLite from 'iconv-lite';
-
 import { logger } from '../utils/logger';
+import { DOMAIN_ID_CONFIG } from '../config/domainId';
 
 let baseRepositoryCopy = null;
 let httpServiceCopy = null;
@@ -68,11 +67,35 @@ export class BaseService {
   static gifReportHandler() {
     // console.log(this.accessRepository)
     return async (req, res, next) => {
-      log.info(`Request..., ${req.path},${JSON.stringify(req.query)}`);
-      // 前端触发了上报
-      log.info('[req.body]', req.body);
-      console.log('[req.body]', req.body);
-      if (req.path === '/zs.gif') {
+      const printLog = `Request..., ${req.path},${JSON.stringify(req.query)}`;
+      console.log(printLog);
+      log.info(printLog);
+
+      // 统计代码 zs.js 鉴权拦截逻辑
+      if (req.path === '/zs.js') {
+        console.log('zs.js', req.path, req.query, req.hostname);
+        const statisticsKey = Object.keys(req.query)[0]; // 统计文件 id { '183281668cc3440449274d1f93c04de6': '' }
+        const { host, referer } = req.headers;
+        // host 为接口 url 的 host 部分
+        // test.baidu.com 页面，script 引入 127.0.0.1:3000/zs.js 这时，请求头 referer 中可以拿到调用接口时的域名
+        // referer http://test.baidu.com:3000/
+        const { hostname } = new URL(referer);
+        console.log('hostname', req.headers, host, referer, hostname);
+        // TODO: 数据库查询，是否有权限、当前所在的域名与ID 是否匹配，否则不允许加载统计 js
+        let errMsg = '';
+        if (!DOMAIN_ID_CONFIG[hostname]) {
+          errMsg = '该域名未在 zuo_statistics 系统中绑定';
+        } else if (DOMAIN_ID_CONFIG[hostname] !== statisticsKey) {
+          errMsg =
+            '当前域名与上报 ID 不匹配，请登录 zuo_statistics 系统检查统计代码';
+        }
+        log.info('是否拦截 errMsg:', errMsg);
+        console.log('是否拦截 errMsg:', errMsg);
+        if (errMsg) {
+          res.status(HttpStatus.FORBIDDEN).json({ code: 403, msg: errMsg });
+          return;
+        }
+      } else if (req.path === '/zs.gif') {
         try {
           const data = JSON.parse(req.query.data); // zs.gif?data={a:1,b:2}
           log.info('data', data);
@@ -138,15 +161,11 @@ export class BaseService {
           });
           log.info(access);
 
-          const result: Base = await baseRepositoryCopy.save(access);
-          // console.log('xxx', result)
-          // let  access: Base[] = await baseRepositoryCopy.find();
-          // console.log('access', access)
+          await baseRepositoryCopy.save(access);
         } catch (e) {
           log.error(e.message);
           logErrorStack.error(e);
           console.log(e);
-          // nginx zuo11.com/statistics/zs.js => zuo1.com:3000
         }
       }
       next();

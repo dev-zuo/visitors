@@ -1,4 +1,3 @@
-
 // 获取性能数据
 function getPerformanceTiming() {
   let t = performance.timing
