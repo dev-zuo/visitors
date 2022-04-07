@@ -95,8 +95,8 @@ const useTableData = () => {
     try {
       loading.value = true;
       // await new Promise((resolve) => setTimeout(resolve, 2000)); // sleep, test loading
-      // const res = await axios.get("http://zuo11.com:3000/base/access", {
-      const res = await axios.get("http://127.0.0.1:3000/base/access", {
+      const res = await axios.get("http://zuo11.com:3000/base/access", {
+        // const res = await axios.get("http://127.0.0.1:3000/base/access", {
         params: params.value,
       });
       console.log(res);
