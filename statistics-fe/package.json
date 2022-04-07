@@ -12,6 +12,7 @@
     "axios": "^0.26.1",
     "core-js": "^3.8.3",
     "element-plus": "^2.1.6",
+    "pinia": "^2.0.13",
     "vue": "^3.2.13",
     "vue-class-component": "^8.0.0-0",
     "vue-router": "^4.0.3"

@@ -33,17 +33,29 @@ export class BaseService {
   async findAccess(@Res() res: Response, @Req() req: Request, @Query() query) {
     log.info(query);
     const { pageIndex = 1, pageCount = 20 } = query;
+    let siteId = query.siteId || '';
+    // 校验 siteId 防止 sql 注入
+    const isNotNumOrStr = /[^0-9a-zA-Z]/g;
+    if (isNotNumOrStr.test(siteId) || siteId.length > 32) {
+      siteId = '';
+    }
     const result: Base[] = await this.baseRepository.find({
+      where: {
+        siteId,
+      },
       order: {
         time: 'DESC',
       },
       skip: (pageIndex - 1) * pageCount,
       take: pageCount,
     });
-
+    console.log('setId', siteId);
+    log.log('setId', siteId);
+    console.log(isNotNumOrStr.test(siteId), siteId.length > 32);
     const [totalResult] = await this.entityManager.query(
-      `SELECT COUNT(*) as total FROM base`,
+      `SELECT COUNT(*) as total FROM base where setId = '${siteId}'`,
     );
+    console.log(`SELECT COUNT(*) as total FROM base where setId = '${siteId}'`);
     log.info(totalResult.total);
     res.status(HttpStatus.OK).json({
       code: 0,
@@ -71,21 +83,28 @@ export class BaseService {
       console.log(printLog);
       log.info(printLog);
 
-      // 统计代码 zs.js 鉴权拦截逻辑
-      if (req.path === '/zs.js') {
-        console.log('zs.js', req.path, req.query, req.hostname);
-        const statisticsKey = Object.keys(req.query)[0]; // 统计文件 id { '183281668cc3440449274d1f93c04de6': '' }
+      let siteId = '';
+      const siteIdPathList = ['/zs.js', '/zs.gif']; // 需要获取 setId 的接口
+      if (siteIdPathList.includes(req.path)) {
         const { host, referer } = req.headers;
         // host 为接口 url 的 host 部分
         // test.baidu.com 页面，script 引入 127.0.0.1:3000/zs.js 这时，请求头 referer 中可以拿到调用接口时的域名
         // referer http://test.baidu.com:3000/
         const { hostname } = new URL(referer);
-        console.log('hostname', req.headers, host, referer, hostname);
         // TODO: 数据库查询，是否有权限、当前所在的域名与ID 是否匹配，否则不允许加载统计 js
+        siteId = SITE_ID_CONFIG[hostname];
+        console.log('hostname', req.headers, host, referer, hostname, siteId);
+      }
+
+      // 统计代码 zs.js 鉴权拦截逻辑
+      if (req.path === '/zs.js') {
+        console.log('zs.js', req.path, req.query, req.hostname);
+        const statisticsKey = Object.keys(req.query)[0]; // 统计文件 id { '183281668cc3440449274d1f93c04de6': '' }
+
         let errMsg = '';
-        if (!SITE_ID_CONFIG[hostname]) {
+        if (!siteId) {
           errMsg = '该域名未在 zuo_statistics 系统中绑定';
-        } else if (SITE_ID_CONFIG[hostname] !== statisticsKey) {
+        } else if (siteId !== statisticsKey) {
           errMsg =
             '当前域名与上报 ID 不匹配，请登录 zuo_statistics 系统检查统计代码';
         }
@@ -98,6 +117,7 @@ export class BaseService {
       } else if (req.path === '/zs.gif') {
         try {
           const data = JSON.parse(req.query.data); // zs.gif?data={a:1,b:2}
+          console.log(data);
           log.info('data', data);
           const { perf, href, navData, screen, network, pathname, referrer } =
             data;
@@ -158,8 +178,10 @@ export class BaseService {
             pathname,
             screen: screen.size,
             screen_info: JSON.stringify(screen),
+            siteId,
           });
           log.info(access);
+          console.log(access);
 
           await baseRepositoryCopy.save(access);
         } catch (e) {

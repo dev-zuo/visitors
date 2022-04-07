@@ -6,6 +6,9 @@ export class Base {
   id: number;
 
   @Column({ default: '' })
+  siteId: string;
+
+  @Column({ default: '' })
   ip: string;
 
   @Column()

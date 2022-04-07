@@ -173,11 +173,15 @@ create table base (
   time timestamp default current_timestamp,
   extra1 varchar(100) default "",
   extra2 varchar(100) default "",
-  extra3 varchar(100) default ""
+  extra3 varchar(100) default "",
+  siteId varchar(64) default ""
 );
 show tables;
 -- insert into base (href,lang) values ('/home', 'ch');
 select * from tb_access;
+
+
+alter table base add siteId varchar(64) default ""; // 添加列
 ```
 
 ## 后台管理系统 vue3+ts

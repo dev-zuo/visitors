@@ -1,15 +1,6 @@
 <template>
   <div class="realtime">
-    <el-pagination
-      v-model:currentPage="currentPage"
-      v-model:page-size="pageSize"
-      :page-sizes="[20, 50, 100]"
-      layout="total, sizes, prev, pager, next, jumper"
-      :total="tableData.total"
-      @size-change="handleSizeChange"
-      @current-change="handleCurrentChange"
-    />
-    <el-table :data="tableData.list" style="width: 100%; overflow: auto">
+    <el-table :data="tableData.list" style="width: 100%; overflow: auto" v-loading="loading">
       <el-table-column type="expand">
         <template #default="scope">
           <RealTimeDetail :row="scope.row" />
@@ -55,49 +46,75 @@
       <el-table-column prop="duration" label="访问时长" />
       <el-table-column prop="pageCount" label="访问页数" />
     </el-table>
+    <div class="pagination-wrap">
+      <el-pagination
+        v-model:currentPage="currentPage"
+        v-model:page-size="pageSize"
+        :page-sizes="[20, 50, 100]"
+        layout="total, sizes, prev, pager, next, jumper"
+        :total="tableData.total"
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+      />
+    </div>
   </div>
 </template>
 
 <script lang="ts" setup>
+import { watch } from "vue";
 import axios from "axios";
 import { computed, onBeforeMount, reactive, ref } from "vue";
 import { ElMessage } from "element-plus";
 import RealTimeDetail from "./RealtimeDetail.vue";
+import { useGlobalStore } from "@/stores/global";
 
+const globalStore = useGlobalStore();
 onBeforeMount(() => {
   findAccess();
 });
 
+watch(
+  () => globalStore.siteId,
+  (newsiteId, oldsiteId) => {
+    console.log("watch siteId change", newsiteId, oldsiteId);
+    resetPage();
+    findAccess();
+  }
+);
 const useTableData = () => {
+  const loading = ref(false);
   const params = computed(() => {
     return {
       pageIndex: currentPage.value,
       pageCount: pageSize.value,
+      siteId: globalStore.siteId,
     };
   });
 
   const findAccess = async () => {
     try {
-      const res = await axios.get("http://zuo11.com:3000/base/access", {
-        // const res = await axios.get("http://127.0.0.1:3000/base/access", {
+      loading.value = true;
+      // await new Promise((resolve) => setTimeout(resolve, 2000)); // sleep, test loading
+      // const res = await axios.get("http://zuo11.com:3000/base/access", {
+      const res = await axios.get("http://127.0.0.1:3000/base/access", {
         params: params.value,
       });
       console.log(res);
       tableData.total = res.data?.data?.total || 0;
       tableData.list = res.data?.data?.list || [];
-      try {
-        tableData.list = tableData.list.map((item: any) => {
-          item.prefObj = JSON.parse(item.perf_calcData);
-          item.uaObj = JSON.parse(item.uaInfo);
-          item.screenObj = JSON.parse(item.screen_info);
-          return item;
-        });
-      } catch (e) {
-        console.error(e);
-      }
+
+      tableData.list = tableData.list.map((item: any) => {
+        item.prefObj = JSON.parse(item.perf_calcData);
+        item.uaObj = JSON.parse(item.uaInfo);
+        item.screenObj = JSON.parse(item.screen_info);
+        return item;
+      });
+      window.scrollTo(0, 0); // 分页后，滚动到顶部
     } catch (e) {
       console.error(e);
       ElMessage.error((e as Error).message);
+    } finally {
+      loading.value = false;
     }
   };
 
@@ -117,12 +134,13 @@ const useTableData = () => {
   };
 
   return {
+    loading,
     getSimpleHref,
     findAccess,
     getRefererSimple,
   };
 };
-const { getSimpleHref, findAccess, getRefererSimple } = useTableData();
+const { loading, getSimpleHref, findAccess, getRefererSimple } = useTableData();
 
 const usePagination = () => {
   const currentPage = ref(1);
@@ -139,6 +157,10 @@ const usePagination = () => {
   const handleCurrentChange = () => {
     findAccess();
   };
+  const resetPage = () => {
+    currentPage.value = 1;
+    pageSize.value = 20;
+  };
 
   return {
     currentPage,
@@ -146,9 +168,10 @@ const usePagination = () => {
     tableData,
     handleSizeChange,
     handleCurrentChange,
+    resetPage,
   };
 };
-const { currentPage, pageSize, tableData, handleSizeChange, handleCurrentChange } = usePagination();
+const { currentPage, pageSize, tableData, handleSizeChange, handleCurrentChange, resetPage } = usePagination();
 </script>
 
 <style lang="scss" scoped>
@@ -166,5 +189,10 @@ const { currentPage, pageSize, tableData, handleSizeChange, handleCurrentChange 
     overflow: hidden;
     text-overflow: ellipsis;
   }
+}
+.pagination-wrap {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 20px;
 }
 </style>

@@ -1,11 +1,20 @@
 <template>
   <div id="app">
     <header>
-      <span class="title">zuo-statistics统计</span>
-      <nav>
-        <router-link to="dashboard">概览</router-link>
-        <router-link to="realtime">实时统计</router-link>
-      </nav>
+      <div class="header-left">
+        <span class="title">zuo-statistics统计</span>
+        <nav>
+          <router-link to="dashboard">概览</router-link>
+          <router-link to="realtime">实时统计</router-link>
+        </nav>
+      </div>
+      <div class="header-right">
+        <el-select v-model="globalStore.siteId">
+          <!-- <el-option label="127.0.0.1" value="123456"></el-option> -->
+          <el-option label="zuo11.com" value="183281668cc3440449274d1f93c04de6"></el-option>
+          <el-option label="fe.zuo11.com" value="283281668cc3440449274d1f93c04de6"></el-option>
+        </el-select>
+      </div>
     </header>
     <div class="main">
       <router-view></router-view>
@@ -17,7 +26,18 @@
   </div>
 </template>
 
+<script lang="ts" setup>
+import { useGlobalStore } from "@/stores/global";
+
+const globalStore = useGlobalStore();
+</script>
+
 <style lang="scss">
+@mixin flex-center() {
+  display: flex;
+  align-items: center;
+}
+
 body {
   margin: 0;
   font-size: 12px;
@@ -51,10 +71,15 @@ body {
   }
 
   header {
+    @include flex-center();
+    justify-content: space-between;
     border-bottom: 1px solid #ddd;
     box-shadow: 0 0 5px #ccc;
     .title {
       font-size: 24px;
+    }
+    .header-left {
+      @include flex-center();
     }
   }
 
