@@ -49,13 +49,15 @@ export class BaseService {
       skip: (pageIndex - 1) * pageCount,
       take: pageCount,
     });
-    console.log('setId', siteId);
-    log.log('setId', siteId);
+    console.log('siteId', siteId);
+    log.log('siteId', siteId);
     console.log(isNotNumOrStr.test(siteId), siteId.length > 32);
     const [totalResult] = await this.entityManager.query(
-      `SELECT COUNT(*) as total FROM base where setId = '${siteId}'`,
+      `SELECT COUNT(*) as total FROM base where siteId = '${siteId}'`,
     );
-    console.log(`SELECT COUNT(*) as total FROM base where setId = '${siteId}'`);
+    console.log(
+      `SELECT COUNT(*) as total FROM base where siteId = '${siteId}'`,
+    );
     log.info(totalResult.total);
     res.status(HttpStatus.OK).json({
       code: 0,
@@ -84,7 +86,7 @@ export class BaseService {
       log.info(printLog);
 
       let siteId = '';
-      const siteIdPathList = ['/zs.js', '/zs.gif']; // 需要获取 setId 的接口
+      const siteIdPathList = ['/zs.js', '/zs.gif']; // 需要获取 siteId 的接口
       if (siteIdPathList.includes(req.path)) {
         const { host, referer } = req.headers;
         // host 为接口 url 的 host 部分
