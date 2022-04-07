@@ -27,11 +27,23 @@ var _hmt = _hmt || [];
 })();
 </script>
 
+// zuo11.com 统计代码
 <script>
 var _hmt = _hmt || [];
 (function() {
   var hm = document.createElement("script");
   hm.src = "http://zuo11.com:3000/zs.js?183281668cc3440449274d1f93c04de6";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+// fe.zuo11.com 统计代码
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "http://zuo11.com:3000/zs.js?283281668cc3440449274d1f93c04de6";
   var s = document.getElementsByTagName("script")[0]; 
   s.parentNode.insertBefore(hm, s);
 })();

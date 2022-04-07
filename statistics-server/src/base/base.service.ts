@@ -9,7 +9,7 @@ import { Base } from './base.entity';
 import { HttpService } from '@nestjs/axios';
 import * as iconvLite from 'iconv-lite';
 import { logger } from '../utils/logger';
-import { DOMAIN_ID_CONFIG } from '../config/domainId';
+import { SITE_ID_CONFIG } from '../config/siteId';
 
 let baseRepositoryCopy = null;
 let httpServiceCopy = null;
@@ -83,9 +83,9 @@ export class BaseService {
         console.log('hostname', req.headers, host, referer, hostname);
         // TODO: 数据库查询，是否有权限、当前所在的域名与ID 是否匹配，否则不允许加载统计 js
         let errMsg = '';
-        if (!DOMAIN_ID_CONFIG[hostname]) {
+        if (!SITE_ID_CONFIG[hostname]) {
           errMsg = '该域名未在 zuo_statistics 系统中绑定';
-        } else if (DOMAIN_ID_CONFIG[hostname] !== statisticsKey) {
+        } else if (SITE_ID_CONFIG[hostname] !== statisticsKey) {
           errMsg =
             '当前域名与上报 ID 不匹配，请登录 zuo_statistics 系统检查统计代码';
         }
