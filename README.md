@@ -182,6 +182,9 @@ select * from tb_access;
 
 
 alter table base add siteId varchar(64) default ""; // 添加列
+alter table base add uuid varchar(64) default ""; // 添加列
+alter table base add uuidUaIp varchar(64) default ""; 
+
 ```
 
 ## 后台管理系统 vue3+ts
@@ -244,3 +247,29 @@ alter table base change ua ua varchar(500) default '';
 #### 错误 log 统一记录到一个位置
 
 使用 log4js
+
+### uv 怎么生产访客标识
+
+访客标识码是百度统计根据访客的访问设备、系统环境、cookie等参数生成的一个用于识别唯一访客的标记。屏蔽一个访客标识码，实际是屏蔽其对应的一个或者多个商盾屏蔽码，因统计口径略有差异，极少数情况下，一个访客标识码对应的商盾屏蔽码发生变化，可能导致该访客标识码屏蔽效果不完全。
+
+一个用户基本不会变的属性、可以唯一标识用户身份
+
+- 电脑系统 win 10 / mac
+- 是否是移动端
+- CPU 核心/线程
+- IP
+- Cookie
+
+标记新老用户，用户唯一标识优缺点分析：（针对百度统计类，非登录游客计算 uid）
+
+- 根据 express-session 生成的 session id 来标识用户
+  - 缺点: 前端用户清除 cookie 后, session id 会变
+- 根据 IP 标识
+  - 缺点: 网络供应商不稳定，换了网络环境 ip 会变
+- 根据 ua 来标识
+  - 缺点：ua 包含浏览器版本信息、可设置，升级浏览器版本后 ua 值也会变
+- ua、cpu、屏幕分辨率标记用户有一定重复的概率
+
+理论上，怎么计算都会有缺点，这里我们尽量找到一种合理的方案，
+方式1：ip + ua
+方式2：sessionID

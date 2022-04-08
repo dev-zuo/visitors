@@ -9,6 +9,12 @@ export class Base {
   siteId: string;
 
   @Column({ default: '' })
+  uuidUaIp: string; // 通过 ua + ip 标记用户
+
+  @Column({ default: '' })
+  uuid: string; // 通过 session id 标记用户
+
+  @Column({ default: '' })
   ip: string;
 
   @Column()

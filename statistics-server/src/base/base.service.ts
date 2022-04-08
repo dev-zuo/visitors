@@ -10,6 +10,7 @@ import { HttpService } from '@nestjs/axios';
 import * as iconvLite from 'iconv-lite';
 import { logger } from '../utils/logger';
 import { SITE_ID_CONFIG } from '../config/siteId';
+import { createHmac } from 'crypto';
 
 let baseRepositoryCopy = null;
 let httpServiceCopy = null;
@@ -81,6 +82,31 @@ export class BaseService {
   static gifReportHandler() {
     // console.log(this.accessRepository)
     return async (req, res, next) => {
+      req.session.visits = req.session.visits ? req.session.visits + 1 : 1;
+
+      // connect.sid=s%3AL8TqsdGPAmyIN7ILWzVGwPICvm;\
+      //  a=1
+      console.log(
+        req.session,
+        req.headers.cookie,
+        `第 ${req.session.visits} 次访问`,
+      );
+      const cookiesList = req.headers.cookie?.split(';') || [];
+      const cookiesObj = cookiesList.reduce((result, item) => {
+        const [key, value] = item.split('=');
+        result[key?.trim()] = value;
+        return result;
+      }, {});
+      if (cookiesObj['connect.sid']) {
+        console.log(cookiesObj, cookiesObj['connect.sid']);
+        // 根据 session sid 生成用户id
+        const uuid = createHmac('sha256', 'my-secret-salt')
+          .update(cookiesObj['connect.sid'])
+          .digest('hex');
+        console.log(uuid); // 64 位
+        req.session.uuid = uuid;
+      }
+
       const printLog = `Request..., ${req.path},${JSON.stringify(req.query)}`;
       console.log(printLog);
       log.info(printLog);
@@ -95,7 +121,7 @@ export class BaseService {
         const { hostname } = new URL(referer);
         // TODO: 数据库查询，是否有权限、当前所在的域名与ID 是否匹配，否则不允许加载统计 js
         siteId = SITE_ID_CONFIG[hostname];
-        console.log('hostname', req.headers, host, referer, hostname, siteId);
+        // console.log('hostname', req.headers, host, referer, hostname, siteId);
       }
 
       // 统计代码 zs.js 鉴权拦截逻辑
@@ -119,7 +145,7 @@ export class BaseService {
       } else if (req.path === '/zs.gif') {
         try {
           const data = JSON.parse(req.query.data); // zs.gif?data={a:1,b:2}
-          console.log(data);
+          // console.log(data);
           log.info('data', data);
           const { perf, href, navData, screen, network, pathname, referrer } =
             data;
@@ -154,6 +180,11 @@ export class BaseService {
             log.error(e.message);
             logErrorStack.info(e);
           }
+
+          const uuidUaIp = createHmac('sha256', 'my-secret-salt')
+            .update(ua + ip)
+            .digest('hex');
+          console.log(ua + ip, uuidUaIp);
           Object.assign(access, {
             ip: ip,
             region: ipInfo.addr || '', // 请求接口获取
@@ -181,15 +212,17 @@ export class BaseService {
             screen: screen.size,
             screen_info: JSON.stringify(screen),
             siteId,
+            uuid: req.session.uuid,
+            uuidUaIp,
           });
           log.info(access);
-          console.log(access);
+          // console.log(access);
 
           await baseRepositoryCopy.save(access);
         } catch (e) {
           log.error(e.message);
           logErrorStack.error(e);
-          console.log(e);
+          // console.log(e);
         }
       }
       next();

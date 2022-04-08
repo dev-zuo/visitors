@@ -5,10 +5,18 @@ import { join } from 'path';
 import { BaseService } from './base/base.service';
 import * as express from 'express';
 import * as log4js from 'log4js';
+import * as session from 'express-session';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
+  app.use(
+    session({
+      secret: 'my-secret-zuo-statistics-some-salt',
+      resave: false,
+      saveUninitialized: false,
+    }),
+  );
   // access log
   app.use(log4js.connectLogger(log4js.getLogger('http'), { level: 'auto' }));
   // 上报 gif 拦截
