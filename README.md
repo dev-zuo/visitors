@@ -340,3 +340,7 @@ alter table base add visitDuration varchar(15) default "";
 ```js
 Storage {Hm_lpvt_183281668cc3440449274d1f93c04de6: '1649517493', Sleepy: '0', SleepyTimer: '2817', length: 3}
 ```
+
+```sql
+ alter table base add zsWindowId varchar(30) default "";
+```
