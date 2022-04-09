@@ -8,7 +8,7 @@ let fsContent = fs
   .toString();
 fsContent = fsContent.replace(/\{\{urlPrefix\}\}/g, config.urlPrefix);
 
-console.log(process.env.NODE_ENV);
+console.log('zj.js 打包，当前环境：', process.env.NODE_ENV || '生产环境');
 
 const result = UglifyJS.minify(fsContent);
 fs.writeFileSync(

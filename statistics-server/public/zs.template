@@ -48,37 +48,48 @@ function getPerformanceTiming() {
     calcData
   }
 }
+// // 如果错误有try-catch捕获，那程序会继续执行，如果没有捕获，会触发error事件，程序不会向下执行，注意：window.onerror要放在最前面
+// window.addEventListener('error', (message, url, line) => {
+//   console.log('message: ' + message) // message: Uncaught TypeError: 类型错误
+//   console.log('url: ' + url) // url: http://127.0.0.1/error.html
+//   console.log('line:' + line) // line:25
+// }) 
 
+window.addEventListener('beforeunload', () => {
+  var startTime = performance.timing.navigationStart
+  var beforeunloadTime = +new Date()
+  var visitDuration = (beforeunloadTime - startTime) / 1000
+  console.log(`beforeunload, startTime: ${startTime}, beforeunloadTime: ${beforeunloadTime}, 页面停留时长: ${visitDuration}s`)
 
-// 如果错误有try-catch捕获，那程序会继续执行，如果没有捕获，会触发error事件，程序不会向下执行，注意：window.onerror要放在最前面
-window.addEventListener('error', (message, url, line) => {
-  console.log('message: ' + message) // message: Uncaught TypeError: 类型错误
-  console.log('url: ' + url) // url: http://127.0.0.1/error.html
-  console.log('line:' + line) // line:25
-}) 
+  var data = {
+    dataType: 'beforeunload', // 页面离开事件
+    navigationStartTime: startTime + '',
+    beforeunloadTime: beforeunloadTime + '',
+    visitDuration: visitDuration + '',
+    href: location.href,
+    zsWindowId: window.zsWindowId + ''
+  }
+  report(data)
+  // https://caniuse.com/?search=navigator.sendBeacon 完全不支持 IE
+  // navigator.sendBeacon('/base/pageUnload', `{"page": "/xxx", "duration": "12s" }`)
+})
 
 // 上报 js
 function report(params) {
   var img = document.createElement('img')
   // var img = new Image(1, 1)
-  let str = JSON.stringify(params)
-  console.log('【cccc】', params, str, encodeURIComponent(str),str.length )
+  var str = JSON.stringify(params)
+  console.log('【data】', params, str, encodeURIComponent(str), str.length )
   img.src = '{{urlPrefix}}/zs.gif?data=' + encodeURIComponent(str);
-  img.onload = function () {
-    console.log('资源加载成功')
-  }
 }
-
-window.addEventListener('unload', (event) => {
-  navigator.sendBeacon('/base/pageUnload', `{"page": "/xxx", "duration": "12s" }`)
-})
 
 window.addEventListener('load', (event) => {
   console.log('onload')
-  var performance = {}
+  window.zsWindowId = Math.random()
+  var performanceTemp = {}
   setTimeout(() => {
     // 性能数据
-    performance = getPerformanceTiming()
+    performanceTemp = getPerformanceTiming()
 
     // UA 等
     var navProps = ['userAgent', 'platform', 'language', 'hardwareConcurrency', 'deviceMemory', 'cookieEnabled']
@@ -87,7 +98,7 @@ window.addEventListener('load', (event) => {
 
     // 上报数据
     var reportData = {
-      perf: performance,
+      perf: performanceTemp,
       href: location.href,
       pathname: location.pathname,
       navData: navData,
@@ -97,7 +108,9 @@ window.addEventListener('load', (event) => {
         colorDepth: screen.colorDepth // 屏幕颜色：24-bit
       },
       network: navigator.connection.effectiveType,
-      referrer: document.referrer
+      referrer: document.referrer,
+      zsWindowId: window.zsWindowId + '',
+      navigationStartTime: performance.timing.navigationStart
     }
     report(reportData)
   }, 0)

@@ -97,6 +97,8 @@ export class BaseService {
         result[key?.trim()] = value;
         return result;
       }, {});
+      // localhost 访问 cookie 为空，需要用 127.0.0.1 来调试，不然没有 uuid
+      // console.log('cookie', cookiesObj, req.headers.cookie);
       if (cookiesObj['connect.sid']) {
         console.log(cookiesObj, cookiesObj['connect.sid']);
         // 根据 session sid 生成用户id
@@ -114,10 +116,11 @@ export class BaseService {
       let siteId = '';
       const siteIdPathList = ['/zs.js', '/zs.gif']; // 需要获取 siteId 的接口
       if (siteIdPathList.includes(req.path)) {
-        const { host, referer } = req.headers;
+        const { referer } = req.headers;
         // host 为接口 url 的 host 部分
         // test.baidu.com 页面，script 引入 127.0.0.1:3000/zs.js 这时，请求头 referer 中可以拿到调用接口时的域名
         // referer http://test.baidu.com:3000/
+        // console.log('referer', req.headers, referer);
         const { hostname } = new URL(referer);
         // TODO: 数据库查询，是否有权限、当前所在的域名与ID 是否匹配，否则不允许加载统计 js
         siteId = SITE_ID_CONFIG[hostname];
@@ -128,7 +131,6 @@ export class BaseService {
       if (req.path === '/zs.js') {
         console.log('zs.js', req.path, req.query, req.hostname);
         const statisticsKey = Object.keys(req.query)[0]; // 统计文件 id { '183281668cc3440449274d1f93c04de6': '' }
-
         let errMsg = '';
         if (!siteId) {
           errMsg = '该域名未在 zuo_statistics 系统中绑定';
@@ -147,8 +149,45 @@ export class BaseService {
           const data = JSON.parse(req.query.data); // zs.gif?data={a:1,b:2}
           // console.log(data);
           log.info('data', data);
-          const { perf, href, navData, screen, network, pathname, referrer } =
-            data;
+
+          // 离开页面时上报
+          if (data?.dataType === 'beforeunload') {
+            const {
+              navigationStartTime,
+              beforeunloadTime,
+              visitDuration,
+              zsWindowId,
+              href,
+            } = data;
+            // https://typeorm.io/repository-api
+            const result = await baseRepositoryCopy.update(
+              { navigationStartTime, zsWindowId, href, uuid: req.session.uuid }, // where
+              { beforeunloadTime, visitDuration }, // set
+            );
+            console.log('beforeunload update result', result, result.affected);
+            if (result.affected !== 1) {
+              log.error(
+                'update 离开时间异常, 影响行数',
+                result.affected,
+                data,
+                req.session.uuid,
+              );
+            }
+            return;
+          }
+
+          // onload 事件上报
+          const {
+            perf,
+            href,
+            navData,
+            screen,
+            network,
+            pathname,
+            referrer,
+            zsWindowId,
+            navigationStartTime,
+          } = data;
           // IP、IP归属地（可用于地域统计，用于屏蔽恶意 IP 爬虫、骚扰）、宽带类型、origin/host 同源检测、页面跳转还是直接访问：Referer、UA,PV,页面怎么计算
           const { 'user-agent': ua } = req.headers;
           // referrer
@@ -214,6 +253,8 @@ export class BaseService {
             siteId,
             uuid: req.session.uuid,
             uuidUaIp,
+            zsWindowId,
+            navigationStartTime,
           });
           log.info(access);
           // console.log(access);

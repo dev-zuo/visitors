@@ -15,6 +15,18 @@ export class Base {
   uuid: string; // 通过 session id 标记用户
 
   @Column({ default: '' })
+  navigationStartTime: string;
+
+  @Column({ default: '' })
+  beforeunloadTime: string;
+
+  @Column({ default: '' })
+  visitDuration: string;
+
+  @Column({ default: '' })
+  zsWindowId: string;
+
+  @Column({ default: '' })
   ip: string;
 
   @Column()

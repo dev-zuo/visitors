@@ -95,7 +95,7 @@ nest 利用 express 开启静态服务，将上报的 js 文件，gif 图放到 
 
   ![jianshu_console_performance.png](./docs/jianshu_console_performance.png)
 
-> performance.timing 即将废弃，需要替换为 PerformanceNavigationTiming，当前处于实验性阶段，兼容性还可以，后面抽空研究下
+> performance.timing 即将废弃，需要替换为 PerformanceNavigationTiming，当前处于实验性阶段，兼容性较差，完全不支持 IE。目前来看 performance.timing 的兼容性更好，还是继续使用
 
 ### mysql
 
@@ -248,7 +248,7 @@ alter table base change ua ua varchar(500) default '';
 
 使用 log4js
 
-### uv 怎么生产访客标识
+### uv 怎么生成访客标识(游客,uuid)
 
 访客标识码是百度统计根据访客的访问设备、系统环境、cookie等参数生成的一个用于识别唯一访客的标记。屏蔽一个访客标识码，实际是屏蔽其对应的一个或者多个商盾屏蔽码，因统计口径略有差异，极少数情况下，一个访客标识码对应的商盾屏蔽码发生变化，可能导致该访客标识码屏蔽效果不完全。
 
@@ -273,3 +273,70 @@ alter table base change ua ua varchar(500) default '';
 理论上，怎么计算都会有缺点，这里我们尽量找到一种合理的方案，
 方式1：ip + ua
 方式2：sessionID
+
+#### 2022-04-09 数据收集情况
+
+ 类型 | zuo-statistics | 百度统计
+ --- | --- | ---
+ pv | 233 | 240
+ uv - sessionID | 125 | 134
+ uv - UA+IP | 114 | 134
+ ip | 111 | 130
+
+```sql
+-- PV
+SELECT href, ip from base WHERE href LIKE '%www.zuo11.com%' and DATE_FORMAT(time, '%Y%m%d') = '20220409';
+-- UV - sessionID 计算法
+SELECT uuid,count(uuid) from base WHERE href LIKE '%www.zuo11.com%' and DATE_FORMAT(time, '%Y%m%d') = '20220409' GROUP BY uuid;
+-- UV - UA + IP 计算法
+SELECT uuidUaIp,count(uuidUaIp) from base WHERE href LIKE '%www.zuo11.com%' and DATE_FORMAT(time, '%Y%m%d') = '20220409' GROUP BY uuidUaIp;
+-- IP
+SELECT ip,count(ip) from base WHERE href LIKE '%www.zuo11.com%' and DATE_FORMAT(time, '%Y%m%d') = '20220409' GROUP BY ip;
+```
+
+因此
+
+- pv > uv > ip
+- sessionID 计算 uv > UA+IP 计算 uv
+
+ip 数据大于 uv 数据是因为，同一个 ip 使用不同的浏览器、或者浏览器版本升级后会被当成是不同的用户
+sessionID 计算 UV 数据量大于 UA + IP 是因为 session id 有有效期，过期或者手动删除 cookie 后，会重新生产 sessionID
+
+为了是数据更加能够反映真实情况，这里以  UA+IP 方式来标记 uv 数据
+
+### 用户访问时长计算
+
+对于纯 html 页面（非vue/react) ，计算页面访问时长，可以使用如下方法
+
+```js
+window.addEventListener('beforeunload', () => {
+  console.log('onbeforeunload', new Date(), +new Date())
+  startTime = performance.timing?.navigationStart
+  console.log('页面停留时长(s)',  window.startTime, (+new Date() - window.startTime) / 1000)
+})
+```
+
+测试 demo 地址：[页面访问时长计算-fedemo - github](https://github.com/zuoxiaobai/fedemo/blob/master/src/DebugDemo/%E9%A1%B5%E9%9D%A2%E8%AE%BF%E9%97%AE%E6%97%B6%E9%95%BF%E8%AE%A1%E7%AE%97/index.html)
+
+performance.timing，参考：[通过 performance.timing 简单理解浏览器输入 url 到页面显示全过程](http://www.zuo11.com/blog/2020/12/performance-timing.html)
+
+```sql
+-- 开始时间、结束时间、访问时长
+alter table base add navigationStartTime varchar(15) default ""; 
+alter table base add beforeunloadTime varchar(15) default ""; 
+alter table base add visitDuration varchar(15) default "";
+```
+
+离开页面上报，不会在数据库写入一条记录，怎么找到这个页面进入时存入数据库的记录？
+
+用 sessionId + 页面 url 对于两个 tab 同时打开一个页面的场景会有问题
+
+通过在 window 上加一个特殊标识可以标记当前 tab 的唯一性
+
+使用随机字符串?  Math.random()
+
+百度统计会在 sessionStorage 上存 tab 唯一标识，我们这里用 随机数
+
+```js
+Storage {Hm_lpvt_183281668cc3440449274d1f93c04de6: '1649517493', Sleepy: '0', SleepyTimer: '2817', length: 3}
+```
