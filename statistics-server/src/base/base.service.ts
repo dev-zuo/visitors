@@ -157,11 +157,22 @@ export class BaseService {
               beforeunloadTime,
               visitDuration,
               zsWindowId,
-              href,
+              pathname,
+              origin,
             } = data;
+
+            // DOMContentLoaded 和 beforeunload 时间如果间隔非常小，DOMContentLoaded 写入数据库还未成功
+            // 可能会导致 update 失败，加一个延时更新
+            await new Promise((resolve) => setTimeout(resolve, 2000));
             // https://typeorm.io/repository-api
             const result = await baseRepositoryCopy.update(
-              { navigationStartTime, zsWindowId, href, uuid: req.session.uuid }, // where
+              {
+                navigationStartTime,
+                zsWindowId,
+                pathname,
+                origin,
+                uuid: req.session.uuid,
+              }, // where
               { beforeunloadTime, visitDuration }, // set
             );
             console.log('beforeunload update result', result, result.affected);
@@ -176,7 +187,41 @@ export class BaseService {
             return;
           }
 
-          // onload 事件上报
+          // load 事件上报
+          if (data?.dataType === 'load') {
+            const { navigationStartTime, zsWindowId, pathname, origin, perf } =
+              data;
+            // DOMContentLoaded 和 load 时间如果间隔非常小，DOMContentLoaded 写入数据库还未成功
+            // 可能会导致 update 失败，加一个延时更新
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+            // https://typeorm.io/repository-api
+            const result = await baseRepositoryCopy.update(
+              {
+                navigationStartTime,
+                zsWindowId,
+                pathname,
+                origin,
+                uuid: req.session.uuid,
+              }, // where
+              {
+                perf_load: perf.calcData.Loaded,
+                performance_timing: JSON.stringify(perf.raw),
+                perf_calcData: JSON.stringify(perf.calcData),
+              }, // set
+            );
+            console.log('load update result', result, result.affected);
+            if (result.affected !== 1) {
+              log.error(
+                'update 离开时间异常, 影响行数',
+                result.affected,
+                data,
+                req.session.uuid,
+              );
+            }
+            return;
+          }
+
+          // DOMContentLoaded 事件上报
           const {
             perf,
             href,
@@ -184,6 +229,7 @@ export class BaseService {
             screen,
             network,
             pathname,
+            origin,
             referrer,
             zsWindowId,
             navigationStartTime,
@@ -247,6 +293,7 @@ export class BaseService {
             cookieEnabled: navData.cookieEnabled,
             network,
             href,
+            origin,
             pathname,
             screen: screen.size,
             screen_info: JSON.stringify(screen),

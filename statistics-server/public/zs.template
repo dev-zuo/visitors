@@ -63,11 +63,14 @@ window.addEventListener('beforeunload', () => {
 
   var data = {
     dataType: 'beforeunload', // 页面离开事件
+    // 查找访问数据记录
     navigationStartTime: startTime + '',
+    pathname: location.pathname,
+    origin: location.origin,
+    zsWindowId: window.zsWindowId + '',
+    // 需要更新的数据
     beforeunloadTime: beforeunloadTime + '',
     visitDuration: visitDuration + '',
-    href: location.href,
-    zsWindowId: window.zsWindowId + ''
   }
   report(data)
   // https://caniuse.com/?search=navigator.sendBeacon 完全不支持 IE
@@ -84,7 +87,24 @@ function report(params) {
 }
 
 window.addEventListener('load', (event) => {
-  console.log('onload')
+  var startTime = performance.timing.navigationStart
+  setTimeout(() => {
+    var performanceTemp = getPerformanceTiming()
+    var data = {
+      dataType: 'load', // 页面 load 事件
+      navigationStartTime: startTime + '',
+      zsWindowId: window.zsWindowId + '',
+      pathname: location.pathname,
+      origin: location.origin,
+      // 需要更新的数据
+      perf: performanceTemp
+    }
+    report(data)
+  }, 0)
+}),
+
+window.addEventListener('DOMContentLoaded', (event) => {
+  console.log('DOMContentLoaded')
   window.zsWindowId = Math.random()
   var performanceTemp = {}
   setTimeout(() => {
@@ -98,9 +118,11 @@ window.addEventListener('load', (event) => {
 
     // 上报数据
     var reportData = {
+      dataType: 'DOMContentLoaded', // 页面 DOMContentLoaded 事件
       perf: performanceTemp,
       href: location.href,
       pathname: location.pathname,
+      origin: location.origin,
       navData: navData,
       screen: {
         size: screen.width + 'x' + screen.height,

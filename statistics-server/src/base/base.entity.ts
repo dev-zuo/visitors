@@ -87,6 +87,9 @@ export class Base {
   href: string;
 
   @Column()
+  origin: string;
+
+  @Column()
   pathname: string;
 
   @Column()
