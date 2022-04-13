@@ -51,10 +51,9 @@ export class BaseService {
     //   take: pageCount,
     // });
     const skip = (pageIndex - 1) * pageCount;
-    const result: Base[] = await this.entityManager.query(
-      `SELECT *,count(*) as pageCount from base where siteId = '${siteId}' GROUP BY uuid ORDER BY time desc  LIMIT ${skip},${pageCount};`,
-    );
-    //
+    const sql = `SELECT *,count(*) as pageCount from base where siteId = '${siteId}' GROUP BY uuid ORDER BY time desc  LIMIT ${skip},${pageCount};`;
+    const result: Base[] = await this.entityManager.query(sql);
+    console.log(sql);
     console.log('siteId', siteId);
     log.log('siteId', siteId);
     console.log(isNotNumOrStr.test(siteId), siteId.length > 32);
