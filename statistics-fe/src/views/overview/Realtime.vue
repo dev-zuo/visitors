@@ -1,6 +1,13 @@
 <template>
   <div class="realtime">
-    <el-table :data="tableData.list" style="width: 100%; overflow: auto" v-loading="loading">
+    <el-table
+      :data="tableData.list"
+      style="width: 100%; overflow: auto"
+      v-loading="loading"
+      @expand-change="expandChange"
+      row-key="id"
+      :expand-row-keys="expandRowKeys"
+    >
       <el-table-column type="expand">
         <template #default="scope">
           <RealTimeDetail :row="scope.row" />
@@ -42,8 +49,12 @@
       <el-table-column prop="ip" label="访问ip" />
       <!-- <el-table-column prop="ua" label="ua" /> -->
       <el-table-column prop="screen" label="分辨率" />
-      <el-table-column prop="uid" label="访客 id" />
-      <el-table-column prop="duration" label="访问时长" />
+      <el-table-column prop="uuidUaIp" label="访客 id" width="100px" show-overflow-tooltip />
+      <el-table-column prop="visitDuration" label="访问时长">
+        <template #default="scope">
+          <span :title="`${scope.row.visitDuration}s`">{{ durationFormat(scope.row.visitDuration) }}</span>
+        </template>
+      </el-table-column>
       <el-table-column prop="pageCount" label="访问页数" />
     </el-table>
     <div class="pagination-wrap">
@@ -62,11 +73,12 @@
 
 <script lang="ts" setup>
 import { watch } from "vue";
-import axios from "axios";
+import axios from "@/utils/axios";
 import { computed, onBeforeMount, reactive, ref } from "vue";
 import { ElMessage } from "element-plus";
 import RealTimeDetail from "./RealtimeDetail.vue";
 import { useGlobalStore } from "@/stores/global";
+import { durationFormat } from "@/utils/util";
 
 const globalStore = useGlobalStore();
 onBeforeMount(() => {
@@ -81,6 +93,7 @@ watch(
     findAccess();
   }
 );
+
 const useTableData = () => {
   const loading = ref(false);
   const params = computed(() => {
@@ -95,8 +108,8 @@ const useTableData = () => {
     try {
       loading.value = true;
       // await new Promise((resolve) => setTimeout(resolve, 2000)); // sleep, test loading
-      const res = await axios.get("http://zuo11.com:3000/base/access", {
-        // const res = await axios.get("http://127.0.0.1:3000/base/access", {
+      // const res = await axios.get("/base/access", {
+      const res = await axios.get("/base/access", {
         params: params.value,
       });
       console.log(res);
@@ -133,14 +146,50 @@ const useTableData = () => {
     }
   };
 
+  const expandRowKeys = ref([]);
+  const getAccessPath = async (row: any, expandedRows: any) => {
+    try {
+      // row.accessPathLoading = true;
+      const res = await axios.get("/base/accessPath", {
+        params: { ...params.value, uuid: row.uuid },
+      });
+      setTimeout(() => {
+        row.accessPathCount = res.data?.data?.total || 0;
+        row.children = res.data?.data?.list || [];
+        row.children.length &&
+          (row.visitDuration = row.children
+            .map((item: Record<string, any>) => item.visitDuration - 0)
+            ?.reduce((prev: number, next: number) => {
+              return prev + next;
+            }));
+        expandRowKeys.value = expandedRows.map((item: any) => item.id);
+      }, 0);
+    } catch (e: any) {
+      ElMessage.error(e.message);
+      console.error(e);
+    } finally {
+      // row.accessPathLoading = false;
+    }
+  };
+  const expandChange = async (row: Record<string, any>, expandedRows: Array<Record<string, any>>) => {
+    let isExpand = expandedRows.some((item) => item.id === row.id);
+    console.log(row, isExpand, expandedRows);
+    if (!isExpand) {
+      return;
+    }
+    getAccessPath(row, expandedRows);
+  };
+
   return {
     loading,
     getSimpleHref,
     findAccess,
     getRefererSimple,
+    expandChange,
+    expandRowKeys,
   };
 };
-const { loading, getSimpleHref, findAccess, getRefererSimple } = useTableData();
+const { loading, getSimpleHref, findAccess, getRefererSimple, expandChange, expandRowKeys } = useTableData();
 
 const usePagination = () => {
   const currentPage = ref(1);
@@ -160,6 +209,7 @@ const usePagination = () => {
   const resetPage = () => {
     currentPage.value = 1;
     pageSize.value = 20;
+    expandRowKeys.value = [];
   };
 
   return {

@@ -72,10 +72,22 @@
         <li>【Loaded】页面load的总耗时: {{ row.prefObj?.Loaded }} ms</li>
       </ul>
     </div>
+    <div class="sec e">
+      <!-- {{ row.children }} -->
+      <p>访问路径：</p>
+      <p>打开时间 停留时长 页面地址</p>
+      <p v-for="item in row.children || []" :key="item.id">
+        <span>{{ new Date(item.navigationStartTime - 0).toLocaleString() }} --- </span>
+        <span>{{ durationFormat(item.visitDuration) }} --- </span>
+        <span>{{ item.href }}</span>
+      </p>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { durationFormat } from "@/utils/util";
+
 defineProps<{
   row: Record<string, any>;
 }>();
