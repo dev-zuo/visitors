@@ -40,16 +40,21 @@ export class BaseService {
     if (isNotNumOrStr.test(siteId) || siteId.length > 32) {
       siteId = '';
     }
-    const result: Base[] = await this.baseRepository.find({
-      where: {
-        siteId,
-      },
-      order: {
-        time: 'DESC',
-      },
-      skip: (pageIndex - 1) * pageCount,
-      take: pageCount,
-    });
+    // const result: Base[] = await this.baseRepository.find({
+    //   where: {
+    //     siteId,
+    //   },
+    //   order: {
+    //     time: 'DESC',
+    //   },
+    //   skip: (pageIndex - 1) * pageCount,
+    //   take: pageCount,
+    // });
+    const skip = (pageIndex - 1) * pageCount;
+    const result: Base[] = await this.entityManager.query(
+      `SELECT *,count(*) as pageCount from base where siteId = '${siteId}' GROUP BY uuid ORDER BY time desc  LIMIT ${skip},${pageCount};`,
+    );
+    //
     console.log('siteId', siteId);
     log.log('siteId', siteId);
     console.log(isNotNumOrStr.test(siteId), siteId.length > 32);
@@ -65,6 +70,29 @@ export class BaseService {
       data: {
         list: result,
         total: totalResult.total - 0,
+      },
+      msg: '请求成功!',
+    });
+  }
+
+  async findAccessPath(
+    @Res() res: Response,
+    @Req() req: Request,
+    @Query() query,
+  ) {
+    console.log('findAccessPath');
+    log.info(query);
+    const { pageIndex = 1, pageCount = 20, siteId, uuid } = query;
+    const skip = (pageIndex - 1) * pageCount;
+    const sql = `SELECT * from base where siteId = '${siteId}' and uuid = '${uuid}' ORDER BY time desc LIMIT ${skip},${pageCount}`;
+    const result: Base[] = await this.entityManager.query(sql);
+    console.log(sql);
+    log.info(result);
+    console.log(result);
+    res.status(HttpStatus.OK).json({
+      code: 0,
+      data: {
+        list: result,
       },
       msg: '请求成功!',
     });

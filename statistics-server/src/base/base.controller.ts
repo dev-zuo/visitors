@@ -11,6 +11,11 @@ export class BaseController {
     return this.baseService.findAccess(res, req, query);
   }
 
+  @Get('accessPath')
+  findAccessPath(@Res() res: Response, @Req() req: Request, @Query() query) {
+    return this.baseService.findAccessPath(res, req, query);
+  }
+
   @Post('pageUnload')
   saveAccessData(
     @Req() request: Request,
