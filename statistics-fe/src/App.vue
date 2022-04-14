@@ -1,28 +1,35 @@
 <template>
   <div id="app">
+    <!-- @start 顶部导航 -->
     <header>
       <div class="header-left">
         <span class="title">zuo-statistics统计</span>
         <nav>
-          <router-link to="dashboard">概览</router-link>
-          <router-link to="realtime">实时统计</router-link>
+          <router-link to="/">首页</router-link>
+          <router-link to="baseReport">基础报告</router-link>
         </nav>
       </div>
       <div class="header-right">
         <el-select v-model="globalStore.siteId">
-          <!-- <el-option label="127.0.0.1" value="123456"></el-option> -->
           <el-option label="zuo11.com" value="183281668cc3440449274d1f93c04de6"></el-option>
           <el-option label="fe.zuo11.com" value="283281668cc3440449274d1f93c04de6"></el-option>
         </el-select>
       </div>
     </header>
+    <!-- @end 顶部导航 -->
+
+    <!-- @start 主内容区域 -->
     <div class="main">
       <router-view></router-view>
     </div>
+    <!-- @end 主内容区域 -->
+
+    <!-- @start footer -->
     <footer>
       Powered by
       <a href="https://github.com/zuoxiaobai/zuo-statistics" target="_blank"> zuo-statistics </a>
     </footer>
+    <!-- @end footer -->
   </div>
 </template>
 

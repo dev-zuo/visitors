@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
-import Home from "../views/Home.vue";
-import Overview from "@/views/overview/index.vue";
+import Home from "@/views/home/index.vue";
+import BaseReport from "@/views/baseReport/index.vue";
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -9,22 +9,25 @@ const routes: Array<RouteRecordRaw> = [
     component: Home,
   },
   {
-    path: "/overview",
-    name: "overview",
-    component: Overview,
+    path: "/baseReport",
+    name: "baseReport",
+    component: BaseReport,
+    redirect: { name: "websiteSummary" },
     children: [
       {
-        path: "/dashboard",
-        name: "dashboard",
-        component: () => import(/* webpackChunkName: "overview" */ "@/views/overview/Dashboard.vue"),
+        path: "/accessAnalysis",
+        name: "accessAnalysis",
+        component: () =>
+          import(/* webpackChunkName: "baseReport" */ "@/views/baseReport/accessAnalysis/RealTimeAccess.vue"),
       },
       {
-        path: "/realtime",
-        name: "realtime",
-        component: () => import(/* webpackChunkName: "overview" */ "@/views/overview/Realtime.vue"),
+        path: "/websiteSummary",
+        name: "websiteSummary",
+        component: () => import(/* webpackChunkName: "baseReport" */ "@/views/baseReport/websiteSummary/index.vue"),
       },
     ],
   },
+
   // {
   //   path: "/about",
   //   name: "about",
