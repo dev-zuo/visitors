@@ -15,6 +15,15 @@ export class Base {
   uuid: string; // 通过 session id 标记用户
 
   @Column({ default: '' })
+  location_province: string;
+
+  @Column({ default: '' })
+  location_city: string;
+
+  @Column({ default: '' })
+  location_region: string;
+
+  @Column({ default: '' })
   navigationStartTime: string;
 
   @Column({ default: '' })

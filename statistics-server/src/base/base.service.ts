@@ -275,19 +275,15 @@ export class BaseService {
             ip = ip.substr(7);
           }
           try {
+            const reqUrl =
+              'http://whois.pconline.com.cn/ipJson.jsp?ip=' + ip + '&json=true';
             const res = await httpServiceCopy
-              .get(
-                'http://whois.pconline.com.cn/ipJson.jsp?ip=' +
-                  ip +
-                  '&json=true',
-                {
-                  responseType: 'arraybuffer',
-                },
-              )
+              .get(reqUrl, { responseType: 'arraybuffer' })
               .toPromise();
             ipInfo = iconvLite.decode(res.data, 'gbk');
             ipInfo = JSON.parse(ipInfo);
-            log.info('res', ipInfo);
+            log.info('res ip info', ipInfo);
+            console.log('res ip info', ipInfo);
           } catch (e) {
             log.error(e.message);
             logErrorStack.info(e);
@@ -297,6 +293,11 @@ export class BaseService {
             .update(ua + ip)
             .digest('hex');
           console.log(ua + ip, uuidUaIp);
+          const {
+            pro: location_province,
+            city: location_city,
+            region: location_region,
+          } = ipInfo || {};
           Object.assign(access, {
             ip: ip,
             region: ipInfo.addr || '', // 请求接口获取
@@ -329,11 +330,15 @@ export class BaseService {
             uuidUaIp,
             zsWindowId,
             navigationStartTime,
+            location_province,
+            location_city,
+            location_region,
           });
           log.info(access);
           // console.log(access);
 
-          await baseRepositoryCopy.save(access);
+          const res = await baseRepositoryCopy.save(access);
+          console.log(res);
         } catch (e) {
           log.error(e.message);
           logErrorStack.error(e);
