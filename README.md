@@ -5,7 +5,7 @@ web ua/pa statistics
 从 0 到 1 写一个类似百度统计的轮子
 
 - 前端上报用原生 js
-- 后台管理系统用 Vue3 + TS + `@vue/cli`
+- 后台管理系统用 Vue3 + TS + vite(peach-fe目录)，早期 (`@vue/cli`）参见 statistics-fe 目录
 - 服务端 Nest.js + mysql
 
 ![百度统计](./docs/百度统计.png)
@@ -343,4 +343,144 @@ Storage {Hm_lpvt_183281668cc3440449274d1f93c04de6: '1649517493', Sleepy: '0', Sl
 
 ```sql
  alter table base add zsWindowId varchar(30) default "";
+```
+
+## @vue/cli 脚手架迁移到 vite
+
+创建 vue3 + vite 脚手架，[create-vue](https://vuejs.org/guide/scaling-up/tooling.html)
+
+```bash
+ npm init vue@3
+
+ Vue.js - The Progressive JavaScript Framework
+
+√ Project name: ... vue-project
+√ Add TypeScript? ... No / Yes
+√ Add JSX Support? ... No / Yes
+√ Add Vue Router for Single Page Application development? ... No / Yes
+√ Add Pinia for state management? ... No / Yes
+√ Add Vitest for Unit Testing? ... No / Yes
+√ Add Cypress for End-to-End testing? ... No / Yes
+√ Add ESLint for code quality? ... No / Yes
+√ Add Prettier for code formatting? ... No / Yes
+
+Scaffolding project in C:\Users\Administrator\Desktop\note\zuo-statistics\vue-project...
+
+Done. Now run:
+
+  cd vue-project
+  npm install   
+  npm run lint  
+  npm run dev   
+ ```
+
+### 1.npm install 报错 fetch <https://registry.npmmirror.com/@cypress%2frequest>: Socket timeout
+
+```js
+npm ERR! code ERR_SOCKET_TIMEOUT
+npm ERR! errno ERR_SOCKET_TIMEOUT
+npm ERR! network Invalid response body while trying to fetch https://registry.npmmirror.com/@cypress%2frequest: Socket timeout
+npm ERR! network This is a problem related to network connectivity.
+npm ERR! network In most cases you are behind a proxy or have bad network settings.
+npm ERR! network
+npm ERR! network If you are behind a proxy, please make sure that the
+npm ERR! network 'proxy' config is set properly.  See: 'npm help config'
+
+npm ERR! A complete log of this run can be found in:
+npm ERR!     C:\Users\Administrator\AppData\Local\npm-cache\_logs\2022-04-18T14_00_10_242Z-debug-0.log
+PS C:\Users\Administrator\Desktop\note\zuo-statistics\peach-fe> npm install
+```
+
+在当前目录新建 .npmrc，修改默认延时，参考 [npm install 报错 fetch xxx: Socket timeout - stack overflow](https://stackoverflow.com/questions/61378672/npm-err-response-timeout-while-trying-to-fetch-https-registry-npmjs-org-react)
+
+```js
+// .npmrc
+npm set timeout=1000000
+```
+
+### 2.Preprocessor dependency "sass" not found. Did you install it? (x2)
+
+npm install sass --save
+
+### 3.Uncaught SyntaxError: The requested module '/node_modules/.vite/deps/vue-router.js?v=be5d13f4' does not provide an export named 'RouteRecordRaw'
+
+将 vue/cli 生成的 RouteRecordRaw 去掉
+
+```js
+import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
+import Home from "@/views/home/index.vue";
+import BaseReport from "@/views/baseReport/index.vue";
+
+const routes: Array<RouteRecordRaw> = []
+```
+
+### 4.Uncaught ReferenceError: process is not defined
+
+@vue/cli 环境变量 process.env.XX 不能再使用。
+
+```ts
+// utils/axios.ts 使用
+console.log("axios base url", process.env.VUE_APP_BASE_URL);
+// .env.production
+VUE_APP_BASE_URL = 'http://zuo11.com:3000'
+// .env.development
+VUE_APP_BASE_URL = 'http://127.0.0.1:3000'
+```
+
+vite 需要改为 import.meta.env.VITE_xxxx，需要以 VITE 前缀开头
+
+```ts
+console.log("axios base url", import.meta.env.VITE_BASE_URL);
+// .env.development
+VITE_BASE_URL = 'http://zuo11.com:3000'
+```
+
+vue-cli 生成的 eslint 配置中，要去掉 process
+
+```js
+  rules: {
+    "no-console": process.env.NODE_ENV === "production" ? "warn" : "off",
+    "no-debugger": process.env.NODE_ENV === "production" ? "warn" : "off"
+  }
+```
+
+process.env => import.meta.env
+
+```js
+const router = createRouter({
+  history: createWebHistory(process.env.BASE_URL),
+  routes,
+});
+
+```
+
+### 5.vite 默认端口为 3000，和nestjs 默认端口一致
+
+再 vite.config.ts 中修改，随便改一个端口
+
+```js
+// https://vitejs.dev/config/
+export default defineConfig({
+  server: {
+    port: 8080,
+  },
+  ```
+  
+### 6.The requested module '/src/composition/composition.d.ts' does not provide an export named 'PaginationParams'
+
+import { SomType } form 'xx.d.ts' 需要改为 import type { xxx } from 'xx.d.ts'
+
+参考：[Vue3+Vite+TypeScript中ts文件导出接口报错](https://segmentfault.com/q/1010000040009277)
+
+### 7.'Ref' is a type and must be imported using a type-only import when 'preserveValueImports' and 'isolatedModules' are both enabled.ts(1444)
+
+```ts
+import { ref, reactive, Ref} from "vue";
+```
+
+需要改为
+
+```ts
+import { ref, reactive } from "vue";
+import type { Ref } from "vue";
 ```
