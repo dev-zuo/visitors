@@ -484,3 +484,38 @@ import { ref, reactive, Ref} from "vue";
 import { ref, reactive } from "vue";
 import type { Ref } from "vue";
 ```
+
+### 8.服务器在部署时 cypress 安装很慢的问题
+
+~~这个包巨大，包含 367 个依赖包，如非必要，不要引入~~。参考：[cypress - npmjs.org](https://www.npmjs.com/package/cypress) 影响 npm i 耗时。
+npm 没有配置淘宝源，配置了就很快了
+
+```bash
+> cypress@9.5.4 postinstall /root/zuo-statistics/peach-fe/node_modules/cypress
+> node index.js --exec install
+
+Installing Cypress (version: 9.5.4)
+
+⠦  Downloading Cypress      20% 3170s
+```
+
+查看 npm 配置
+
+```bash
+[root@VM-0-13-centos peach-fe]# npm config list
+registry = "http://registry.npmjs.org/"
+# 需改
+[root@VM-0-13-centos peach-fe]# npm set registry=https://registry.npmmirror.com/
+[root@VM-0-13-centos peach-fe]# npm config list
+registry = "https://registry.npmmirror.com/"
+
+[root@VM-0-13-centos peach-fe]# npm install
+npm WARN read-shrinkwrap This version of npm is compatible with lockfileVersion@1, but package-lock.json was generated for lockfileVersion@2. I'll try to do my best with it!
+npm WARN peach-fe@0.1.0 No repository field.
+npm WARN peach-fe@0.1.0 No license field.
+
+up to date in 2.835s
+
+72 packages are looking for funding
+  run `npm fund` for details
+```
