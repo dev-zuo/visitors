@@ -1,5 +1,61 @@
 <template>
   <div class="realtime">
+    <!-- {{ searchForm }} -->
+    <section class="table-search">
+      <el-form :inline="true" :model="searchForm" class="demo-form-inline">
+        <div>
+          <el-form-item label="设备类型">
+            <el-radio-group v-model="searchForm.deviceType">
+              <el-radio-button label="">全部</el-radio-button>
+              <el-radio-button label="pc">PC</el-radio-button>
+              <el-radio-button label="mobile">移动端</el-radio-button>
+            </el-radio-group>
+          </el-form-item>
+          <el-form-item label="访客">
+            <el-radio-group v-model="searchForm.isOldUser">
+              <el-radio-button label="">全部</el-radio-button>
+              <el-radio-button :label="false">新房客</el-radio-button>
+              <el-radio-button :label="true">老访客</el-radio-button>
+            </el-radio-group>
+          </el-form-item>
+        </div>
+        <div>
+          <el-form-item label="IP">
+            <el-input v-model="searchForm.ip" placeholder="请输入IP" />
+          </el-form-item>
+          <el-form-item label="来源">
+            <el-select
+              v-model="searchForm.referrer"
+              placeholder="Activity zone"
+            >
+              <el-option
+                v-for="item in referrerList"
+                :key="item.label"
+                :label="item.label"
+                :value="item.code"
+              />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="时间">
+            <el-date-picker
+              v-model="searchForm.date"
+              type="daterange"
+              unlink-panels
+              range-separator="到"
+              start-placeholder="开始时间"
+              end-placeholder="结束时间"
+              :shortcuts="fastDateOption"
+              format="YYYY/MM/DD"
+              value-format="YYYY-MM-DD"
+            />
+          </el-form-item>
+        </div>
+        <el-form-item>
+          <el-button type="primary" @click="queryData">查询</el-button>
+          <el-button type="default" @click="resetData">重置</el-button>
+        </el-form-item>
+      </el-form>
+    </section>
     <el-table
       :data="tableData.list"
       style="width: 100%; overflow: auto"
@@ -102,6 +158,7 @@ import { durationFormat } from "@/utils/util";
 import { usePagination } from "@/composition/usePagination";
 import { useTableData } from "./composition/useRealTimeTable";
 import RealTimeDetail from "./components/RealtimeDetail.vue";
+import { useRealTimeQuery } from "./composition/useRealTimeQuery";
 
 onBeforeMount(() => {
   findAccess();
@@ -120,6 +177,15 @@ const {
 });
 
 const {
+  searchForm,
+  searchFormPayload,
+  referrerList,
+  fastDateOption,
+  resetData,
+  queryData,
+} = useRealTimeQuery({ queryTableData: () => reloadTableData.call() });
+
+const {
   loading,
   getSimpleHref,
   findAccess,
@@ -132,6 +198,7 @@ const {
   pageSize,
   resetPage,
   tableData,
+  searchFormPayload,
 });
 </script>
 

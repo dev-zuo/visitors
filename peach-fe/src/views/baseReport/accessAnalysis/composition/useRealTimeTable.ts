@@ -10,14 +10,17 @@ export const useTableData: (obj: TableDataReq) => any = ({
   pageSize,
   tableData,
   resetPage,
+  searchFormPayload,
 }) => {
   const globalStore = useGlobalStore();
   const loading = ref(false);
+  console.log("searchFormPayload", searchFormPayload);
   const params = computed(() => {
     return {
       pageIndex: currentPage.value,
       pageCount: pageSize.value,
       siteId: globalStore.siteId,
+      ...searchFormPayload.value,
     };
   });
 

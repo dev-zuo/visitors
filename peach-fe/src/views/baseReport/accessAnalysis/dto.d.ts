@@ -3,4 +3,5 @@ export interface TableDataReq {
   pageSize: Ref<number>;
   resetPage: () => void;
   tableData: Record<string, any>;
+  searchFormPayload: Record<string, any>;
 }
