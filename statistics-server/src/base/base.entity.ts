@@ -14,6 +14,9 @@ export class Base {
   @Column({ default: '' })
   uuid: string; // 通过 session id 标记用户
 
+  @Column({ default: false })
+  isOldUser: string; // 是否是老访客
+
   @Column({ default: '' })
   location_province: string;
 

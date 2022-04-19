@@ -293,6 +293,22 @@ export class BaseService {
             .update(ua + ip)
             .digest('hex');
           console.log(ua + ip, uuidUaIp);
+
+          // 判断是否是老用户
+          let isOldUser = false;
+          try {
+            const result: Base[] = await baseRepositoryCopy.find({
+              where: {
+                uuidUaIp,
+              },
+            });
+            isOldUser = !!result.length;
+            console.log(result);
+          } catch (e) {
+            log.error(e.message);
+            logErrorStack.info(e);
+          }
+
           const {
             pro: location_province,
             city: location_city,
@@ -333,6 +349,7 @@ export class BaseService {
             location_province,
             location_city,
             location_region,
+            isOldUser,
           });
           log.info(access);
           // console.log(access);
