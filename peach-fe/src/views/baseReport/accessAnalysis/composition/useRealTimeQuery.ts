@@ -38,11 +38,11 @@ export const useRealTimeQuery = ({ queryTableData }: any) => {
 
   const referrerList = ref([
     { label: "全部", code: "" },
-    { label: "直接访问", code: "baidu.com" },
-    { label: "外部链接", code: "baidu.com" },
+    { label: "直接访问", code: "direct" },
+    { label: "外部链接", code: "otherLink" },
     { label: "百度", code: "baidu.com" },
     { label: "Google", code: "google.com" },
-    { label: "360", code: "360.com" },
+    { label: "360", code: "so.com" },
   ]);
 
   const fastDateOption = [
