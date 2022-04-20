@@ -33,7 +33,18 @@ export class BaseService {
 
   async findAccess(@Res() res: Response, @Req() req: Request, @Query() query) {
     log.info(query);
-    const { pageIndex = 1, pageCount = 20 } = query;
+    console.log(query);
+    const {
+      pageIndex = 1,
+      pageCount = 20,
+      orderBy = 'time', // 排序字段
+      orderSeq = 'desc', // 升序 asc、降序 desc
+    } = query;
+    // ip: '',
+    // referrer: 'baidu.com',
+    // deviceType: 'mobile',
+    // isOldUser: 'true',
+    // date: '2022-04-06,2022-05-03'
     let siteId = query.siteId || '';
     // 校验 siteId 防止 sql 注入
     const isNotNumOrStr = /[^0-9a-zA-Z]/g;
@@ -51,24 +62,61 @@ export class BaseService {
     //   take: pageCount,
     // });
     const skip = (pageIndex - 1) * pageCount;
-    const sql = `SELECT *,count(*) as pageCount from base where siteId = '${siteId}' GROUP BY uuid ORDER BY time desc  LIMIT ${skip},${pageCount};`;
+    let queryRule = '';
+    if (query.ip) {
+      queryRule += `and ip like '%${query.ip}%' `;
+    }
+    if (query.referrer) {
+      switch (query.referrer) {
+        case 'direct':
+          queryRule += `and referer='' `;
+          break;
+        case 'otherLink':
+          queryRule += `and referer != '' and referer not like '%baidu.com%' and referer not like '%google.com%' and referer not like '%so.com%'`;
+          break;
+        default:
+          queryRule += `and referer like '%${query.referrer}%' `;
+      }
+    }
+    if (query.deviceType) {
+      const isMobile = query.deviceType === 'mobile' ? 1 : 0;
+      queryRule += `and isMobile=${isMobile} `;
+    }
+    if (query.isOldUser) {
+      const isOldUser = query.isOldUser === 'true' ? 1 : 0;
+      queryRule += `and isOldUser=${isOldUser} `;
+    }
+    if (query.date) {
+      const [startDate, endDate] = query.date.split(',');
+      // 某一天
+      if (startDate === endDate) {
+        queryRule += `and DATE_FORMAT(time, '%Y-%m-%d') = '${startDate}' `;
+      } else {
+        // 时间间隔
+        queryRule += `and DATE_FORMAT(time, '%Y-%m-%d') <= '${endDate}' and DATE_FORMAT(time, '%Y-%m-%d') >= '${startDate}' `;
+      }
+    }
+    queryRule = queryRule.trim();
+
+    const sql = `SELECT *,count(*) as pageCount from base where siteId = '${siteId}' ${queryRule} GROUP BY uuid ORDER BY time desc  LIMIT ${skip},${pageCount};`;
     console.log(sql);
     const result: Base[] = await this.entityManager.query(sql);
-    console.log('siteId', siteId);
-    log.log('siteId', siteId);
+    console.log('siteId', siteId, result);
+    log.log('siteId', siteId, result);
     console.log(isNotNumOrStr.test(siteId), siteId.length > 32);
-    const [totalResult] = await this.entityManager.query(
-      `SELECT COUNT(*) as total FROM base where siteId = '${siteId}'`,
+    const resCount = await this.entityManager.query(
+      `SELECT count(*) FROM base where siteId = '${siteId}' ${queryRule} GROUP BY uuid`,
     );
     console.log(
-      `SELECT COUNT(*) as total FROM base where siteId = '${siteId}'`,
+      `SELECT count(*) FROM base where siteId = '${siteId}' ${queryRule} GROUP BY uuid`,
     );
-    log.info(totalResult.total);
+    log.info(resCount.length);
+    console.log(resCount.length);
     res.status(HttpStatus.OK).json({
       code: 0,
       data: {
         list: result,
-        total: totalResult.total - 0,
+        total: resCount.length,
       },
       msg: '请求成功!',
     });
