@@ -34,12 +34,15 @@ export class BaseService {
   async findAccess(@Res() res: Response, @Req() req: Request, @Query() query) {
     log.info(query);
     console.log(query);
-    const {
-      pageIndex = 1,
-      pageCount = 20,
-      orderBy = 'time', // 排序字段
-      orderSeq = 'desc', // 升序 asc、降序 desc
+    const { pageIndex = 1, pageCount = 20 } = query;
+    let {
+      orderBy = 'desc', // 升序 asc、降序 desc
+      sortColumn = 'time', // 排序字段
     } = query;
+    orderBy = orderBy || 'desc';
+    sortColumn = sortColumn || 'time';
+
+    // pageCount、visitDuration
     // ip: '',
     // referrer: 'baidu.com',
     // deviceType: 'mobile',
@@ -98,10 +101,10 @@ export class BaseService {
     }
     queryRule = queryRule.trim();
 
-    const sql = `SELECT *,count(*) as pageCount from base where siteId = '${siteId}' ${queryRule} GROUP BY uuid ORDER BY time desc  LIMIT ${skip},${pageCount};`;
+    const sql = `SELECT *,count(*) as pageCount from base where siteId = '${siteId}' ${queryRule} GROUP BY uuid ORDER BY ${sortColumn} ${orderBy} LIMIT ${skip},${pageCount};`;
     console.log(sql);
     const result: Base[] = await this.entityManager.query(sql);
-    console.log('siteId', siteId, result);
+    // console.log('siteId', siteId, result);
     log.log('siteId', siteId, result);
     console.log(isNotNumOrStr.test(siteId), siteId.length > 32);
     const resCount = await this.entityManager.query(
