@@ -1,5 +1,5 @@
 import axios from "@/utils/axios";
-import { computed, ref } from "vue";
+import { computed, ref, reactive } from "vue";
 import { ElMessage } from "element-plus";
 import type { TableDataReq } from "@/views/baseReport/accessAnalysis/dto.d";
 import { watch } from "vue";
@@ -15,11 +15,17 @@ export const useTableData: (obj: TableDataReq) => any = ({
   const globalStore = useGlobalStore();
   const loading = ref(false);
   console.log("searchFormPayload", searchFormPayload);
+  const sortInfo = reactive({
+    sortColumn: "",
+    orderBy: "",
+  });
   const params = computed(() => {
     return {
       pageIndex: currentPage.value,
       pageCount: pageSize.value,
       siteId: globalStore.siteId,
+      sortColumn: sortInfo.sortColumn,
+      orderBy: sortInfo.orderBy,
       ...searchFormPayload.value,
     };
   });
@@ -123,6 +129,14 @@ export const useTableData: (obj: TableDataReq) => any = ({
     }
   );
 
+  const sortChange = ({ column, prop, order }: any) => {
+    console.log(column, prop, order);
+    sortInfo.sortColumn = prop || "";
+    sortInfo.orderBy = order ? (order === "descending" ? "desc" : "asc") : "";
+    resetPage();
+    reloadTableData();
+  };
+
   return {
     loading,
     getSimpleHref,
@@ -131,5 +145,6 @@ export const useTableData: (obj: TableDataReq) => any = ({
     expandChange,
     reloadTableData,
     expandRowKeys,
+    sortChange,
   };
 };

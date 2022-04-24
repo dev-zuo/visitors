@@ -63,6 +63,7 @@
       @expand-change="expandChange"
       row-key="id"
       :expand-row-keys="expandRowKeys"
+      @sort-change="sortChange"
     >
       <el-table-column type="expand">
         <template #default="scope">
@@ -129,14 +130,14 @@
         width="100px"
         show-overflow-tooltip
       />
-      <el-table-column prop="visitDuration" label="访问时长">
+      <el-table-column prop="visitDuration" label="访问时长" sortable>
         <template #default="scope">
           <span :title="`${scope.row.visitDuration}s`">{{
             durationFormat(scope.row.visitDuration)
           }}</span>
         </template>
       </el-table-column>
-      <el-table-column prop="pageCount" label="访问页数" />
+      <el-table-column prop="pageCount" label="访问页数" sortable />
     </el-table>
     <div class="pagination-wrap">
       <el-pagination
@@ -193,6 +194,7 @@ const {
   expandChange,
   expandRowKeys,
   reloadTableData,
+  sortChange,
 } = useTableData({
   currentPage,
   pageSize,
