@@ -34,6 +34,7 @@
   --color-text: var(--vt-c-text-light-1);
 
   --section-gap: 160px;
+  --el-color-primary: #2d4bdc;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -71,4 +72,28 @@ body {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+@mixin flex-center() {
+  display: flex;
+  align-items: center;
+}
+
+.common-white-bg {
+  padding: 20px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 5px 5px 10px #efefef;
+}
+
+.el-menu {
+  --el-menu-item-height: 46px;
+}
+
+i,.cursor-pointer {
+  cursor: pointer;
+}
+
+#app {
+  --el-color-primary: #2d4bdc;
 }

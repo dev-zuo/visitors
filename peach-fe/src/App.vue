@@ -1,15 +1,10 @@
 <template>
-  <div id="app">
+  <!-- 左侧菜单 -->
+  <LeftMenu />
+  <div class="app-right">
     <!-- @start 顶部导航 -->
     <header>
       <div class="header-left">
-        <span class="title">zuo-statistics统计</span>
-        <nav>
-          <router-link to="/">首页</router-link>
-          <router-link to="baseReport">基础报告</router-link>
-        </nav>
-      </div>
-      <div class="header-right">
         <el-select v-model="globalStore.siteId">
           <el-option
             label="zuo11.com"
@@ -20,6 +15,12 @@
             value="283281668cc3440449274d1f93c04de6"
           ></el-option>
         </el-select>
+      </div>
+      <div class="header-right">
+        <nav>
+          <router-link to="/">首页</router-link>
+          <router-link to="baseReport">基础报告</router-link>
+        </nav>
       </div>
     </header>
     <!-- @end 顶部导航 -->
@@ -37,26 +38,22 @@
         zuo-statistics
       </a>
     </footer>
-    <!-- @end footer -->
   </div>
+  <!-- @end footer -->
 </template>
 
 <script lang="ts" setup>
 import { useGlobalStore } from "@/stores/global";
+import LeftMenu from "@/components/LeftMenu.vue";
 
 const globalStore = useGlobalStore();
 </script>
 
 <style lang="scss">
-@mixin flex-center() {
-  display: flex;
-  align-items: center;
-}
-
 body {
   margin: 0;
   font-size: 12px;
-  min-width: 1366px;
+  // min-width: 1366px;
   overflow: auto;
 }
 
@@ -68,6 +65,19 @@ body {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
+  min-height: 600px;
+  background-color: #f8f8f8;
+
+  .app-right {
+    width: calc(100% - 200px);
+    margin-left: 215px;
+    flex: 1;
+    background-color: #f8f8f8;
+    box-shadow: 5px 5px 10px #efefef;
+  }
 
   header,
   footer {
@@ -75,6 +85,7 @@ body {
     align-items: center;
     height: 60px;
     padding: 0 20px;
+    background-color: #fff;
     a {
       margin-left: 20px;
       color: #333;
@@ -88,11 +99,7 @@ body {
   header {
     @include flex-center();
     justify-content: space-between;
-    border-bottom: 1px solid #ddd;
-    box-shadow: 0 0 5px #ccc;
-    .title {
-      font-size: 24px;
-    }
+    box-shadow: 5px 5px 10px #efefef;
     .header-left {
       @include flex-center();
     }
@@ -100,6 +107,7 @@ body {
 
   .main {
     min-height: calc(100vh - 120px);
+    padding: 20px 20px 20px 10px;
   }
 
   footer {
