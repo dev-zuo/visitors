@@ -73,17 +73,26 @@
         <li>【Loaded】页面load的总耗时: {{ row.prefObj?.Loaded }} ms</li>
       </ul>
     </div>
-    <div class="sec e">
+    <div class="sec e visitors-path">
       <!-- {{ row.children }} -->
-      <p>访问路径：</p>
-      <p>打开时间 停留时长 页面地址</p>
-      <p v-for="item in row.children || []" :key="item.id">
-        <span
-          >{{ new Date(item.navigationStartTime - 0).toLocaleString() }} ---
-        </span>
-        <span>{{ durationFormat(item.visitDuration) }} --- </span>
-        <span>{{ item.href }}</span>
-      </p>
+      <table>
+        <tr>
+          <th>访问路径</th>
+          <th>打开时间</th>
+          <th>停留时长</th>
+          <th>页面地址</th>
+        </tr>
+        <tr v-for="item in row.children || []" :key="item.id">
+          <td></td>
+          <td>
+            {{ new Date(item.navigationStartTime - 0).toLocaleString() }}
+          </td>
+          <td>{{ durationFormat(item.visitDuration) }}</td>
+          <td>
+            <a :href="item.href" target="_blank">{{ item.href }}</a>
+          </td>
+        </tr>
+      </table>
     </div>
   </div>
 </template>
@@ -111,31 +120,41 @@ defineProps<{
 .sec {
   padding: 12px;
   border: 1px solid #efefef;
-  border-radius: 10px;
   color: white;
   font-size: 14px;
+  border-radius: 8px;
 }
 .sec-title {
   margin: 0;
 }
 .a {
   grid-area: a;
-  background: #1b1bb3;
+  background: #6d6deb;
 }
 .b {
   grid-area: b;
-  background: #3f92d2;
+  background: #3f92d2bd;
 }
 .c {
   grid-area: c;
-  background: #00af64;
+  background: #45c18c;
 }
 .d {
   grid-area: d;
-  background: #7373d9;
+  background: #7373d9c4;
 }
 .e {
   grid-area: e;
-  background: #66a3d2;
+  color: #333;
+  background: #fff;
+}
+li {
+  word-break: break-all;
+}
+.visitors-path {
+  table td,
+  table th {
+    padding: 5px 20px;
+  }
 }
 </style>

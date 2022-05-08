@@ -82,7 +82,6 @@ body {
 .common-white-bg {
   padding: 20px;
   background: #fff;
-  border-radius: 16px;
   box-shadow: 5px 5px 10px #efefef;
 }
 
@@ -94,6 +93,14 @@ i,.cursor-pointer {
   cursor: pointer;
 }
 
-#app {
-  --el-color-primary: #2d4bdc;
+#app,
+body {
+  --el-color-primary: #2d4fea;
+  --el-color-primary-light-3: #2d4fea;
+  a,
+  a:hover {
+    color: #2d4fea;
+    cursor: pointer;
+    text-decoration: none;
+  }
 }

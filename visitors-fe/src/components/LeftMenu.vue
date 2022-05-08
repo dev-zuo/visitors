@@ -1,5 +1,5 @@
 <template>
-  <div class="app-left" :class="{ 'expand-menu': !menuCollapse }">
+  <div class="app-left" :class="{ 'expand-menu': !globalStore.menuCollapse }">
     <div class="app-left-top">
       <div class="alt-left">
         <img
@@ -10,9 +10,12 @@
         />
         <h1>{{ title }}</h1>
       </div>
-      <div class="alt-collapse" @click="menuCollapse = !menuCollapse">
-        <el-icon :title="menuCollapse ? '展开' : '收起'">
-          <Expand v-if="menuCollapse" />
+      <div
+        class="alt-collapse"
+        @click="globalStore.menuCollapse = !globalStore.menuCollapse"
+      >
+        <el-icon :title="globalStore.menuCollapse ? '展开' : '收起'">
+          <Expand v-if="globalStore.menuCollapse" />
           <Fold v-else />
         </el-icon>
       </div>
@@ -23,7 +26,7 @@
         :default-active="activeMenu"
         :router="true"
         active-text-color="#2846dc"
-        :collapse="menuCollapse"
+        :collapse="globalStore.menuCollapse"
         @open="handleOpen"
         @close="handleClose"
         @select="selectMenu"
@@ -62,9 +65,10 @@ import {
   Fold,
 } from "@element-plus/icons-vue";
 import router from "@/router";
+import { useGlobalStore } from "@/stores/global";
 
-const title = ref("Peach");
-const menuCollapse = ref(false);
+const globalStore = useGlobalStore();
+const title = ref("Visitors");
 const activeMenu = computed(() => {
   let router = useRouter();
   let curRouteName = router.currentRoute.value.name;
@@ -88,10 +92,11 @@ const gotoHome = () => {
 .app-left {
   position: fixed;
   left: 0;
+  top: 0;
   z-index: 5;
   height: 100%;
   width: 64px;
-  flex-shrink: 0;
+  border-right: 1px solid #fafafa;
   transition: width 0.6s;
   background-color: #fff;
 
@@ -122,7 +127,7 @@ const gotoHome = () => {
     height: 120px;
     padding: 20px;
     box-sizing: border-box;
-    box-shadow: 5px 5px 10px #efefef;
+    box-shadow: 0 1px 1px #fafafa;
     .alt-left {
       @include flex-center();
     }

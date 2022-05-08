@@ -17,6 +17,10 @@
               <el-radio-button :label="true">老访客</el-radio-button>
             </el-radio-group>
           </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="queryData">查询</el-button>
+            <el-button type="default" @click="resetData">重置</el-button>
+          </el-form-item>
         </div>
         <div class="middle-query">
           <el-form-item label="IP">
@@ -49,13 +53,9 @@
             />
           </el-form-item>
         </div>
-        <el-form-item>
-          <el-button type="primary" @click="queryData">查询</el-button>
-          <el-button type="default" @click="resetData">重置</el-button>
-        </el-form-item>
       </el-form>
     </section>
-    <section class="common-white-bg">
+    <section class="common-white-bg table-wrap">
       <el-table
         :data="tableData.list"
         style="width: 100%; overflow: auto"
@@ -207,13 +207,6 @@ const {
 
 <style lang="scss" scoped>
 .realtime {
-  padding: 20px;
-  a,
-  a:hover {
-    color: #1276e5;
-    cursor: pointer;
-    text-decoration: none;
-  }
   .ellipsis-text {
     width: 80px;
     white-space: nowrap;
@@ -222,9 +215,13 @@ const {
   }
   .table-search {
     margin-bottom: 20px;
+    padding: 15px 20px;
     .middle-query {
-      margin: 20px 0;
+      margin: 20px 0 0;
     }
+  }
+  .table-wrap {
+    padding: 5px 20px 20px;
   }
 }
 .pagination-wrap {

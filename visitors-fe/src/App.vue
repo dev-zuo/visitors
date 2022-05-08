@@ -1,7 +1,7 @@
 <template>
   <!-- 左侧菜单 -->
   <LeftMenu />
-  <div class="app-right">
+  <div class="app-right" :class="{ 'menu-collapse': globalStore.menuCollapse }">
     <!-- @start 顶部导航 -->
     <header>
       <div class="header-left">
@@ -32,12 +32,12 @@
     <!-- @end 主内容区域 -->
 
     <!-- @start footer -->
-    <footer>
+    <!-- <footer>
       Powered by
       <a href="https://github.com/zuoxiaobai/zuo-statistics" target="_blank">
         zuo-statistics
       </a>
-    </footer>
+    </footer> -->
   </div>
   <!-- @end footer -->
 </template>
@@ -65,18 +65,25 @@ body {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  display: flex;
   width: 100%;
-  min-height: 100vh;
+  height: 100vh;
   min-height: 600px;
   background-color: #f8f8f8;
 
   .app-right {
     width: calc(100% - 200px);
-    margin-left: 215px;
-    flex: 1;
+    margin-left: 200px;
     background-color: #f8f8f8;
     box-shadow: 5px 5px 10px #efefef;
+    transition: all 0.6s;
+    overflow: hidden;
+    &.menu-collapse {
+      width: calc(100% - 64px);
+      margin-left: 64px;
+    }
+    &.menu-collapse header {
+      width: calc(100% - 64px);
+    }
   }
 
   header,
@@ -98,8 +105,11 @@ body {
 
   header {
     @include flex-center();
+    position: fixed;
+    z-index: 10;
+    width: calc(100% - 200px);
     justify-content: space-between;
-    box-shadow: 5px 5px 10px #efefef;
+    box-shadow: 0 1px 1px #fafafa;
     .header-left {
       @include flex-center();
     }
@@ -107,7 +117,8 @@ body {
 
   .main {
     min-height: calc(100vh - 120px);
-    padding: 20px 20px 20px 10px;
+    padding: 20px;
+    margin-top: 60px;
   }
 
   footer {
