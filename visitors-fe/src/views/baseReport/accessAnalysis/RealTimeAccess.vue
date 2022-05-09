@@ -4,32 +4,37 @@
       <el-form :inline="true" :model="searchForm" class="demo-form-inline">
         <div>
           <el-form-item label="设备类型">
-            <el-radio-group v-model="searchForm.deviceType">
+            <el-radio-group v-model="searchForm.deviceType" @change="queryData">
               <el-radio-button label="">全部</el-radio-button>
               <el-radio-button label="pc">PC</el-radio-button>
               <el-radio-button label="mobile">移动端</el-radio-button>
             </el-radio-group>
           </el-form-item>
           <el-form-item label="访客">
-            <el-radio-group v-model="searchForm.isOldUser">
+            <el-radio-group v-model="searchForm.isOldUser" @change="queryData">
               <el-radio-button label="">全部</el-radio-button>
               <el-radio-button :label="false">新访客</el-radio-button>
               <el-radio-button :label="true">老访客</el-radio-button>
             </el-radio-group>
           </el-form-item>
           <el-form-item>
-            <el-button type="primary" @click="queryData">查询</el-button>
+            <!-- <el-button type="primary" @click="queryData">查询</el-button> -->
             <el-button type="default" @click="resetData">重置</el-button>
           </el-form-item>
         </div>
         <div class="middle-query">
           <el-form-item label="IP">
-            <el-input v-model="searchForm.ip" placeholder="请输入IP" />
+            <el-input
+              v-model="searchForm.ip"
+              placeholder="请输入IP"
+              @input="queryDataDebounce"
+            />
           </el-form-item>
           <el-form-item label="来源">
             <el-select
               v-model="searchForm.referrer"
               placeholder="Activity zone"
+              @change="queryData"
             >
               <el-option
                 v-for="item in referrerList"
@@ -50,6 +55,7 @@
               :shortcuts="fastDateOption"
               format="YYYY/MM/DD"
               value-format="YYYY-MM-DD"
+              @change="queryData"
             />
           </el-form-item>
         </div>
@@ -161,6 +167,7 @@ import { usePagination } from "@/composition/usePagination";
 import { useTableData } from "./composition/useRealTimeTable";
 import RealTimeDetail from "./components/RealtimeDetail.vue";
 import { useRealTimeQuery } from "./composition/useRealTimeQuery";
+import { debounce } from "lodash";
 
 onBeforeMount(() => {
   findAccess();
@@ -202,6 +209,11 @@ const {
   resetPage,
   tableData,
   searchFormPayload,
+});
+
+const queryDataDebounce = debounce(queryData, 500, {
+  leading: false,
+  trailing: true,
 });
 </script>
 

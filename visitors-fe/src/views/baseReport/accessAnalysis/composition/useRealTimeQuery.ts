@@ -34,6 +34,7 @@ export const useRealTimeQuery = ({ queryTableData }: any) => {
 
   const resetData = () => {
     Object.assign(searchForm, cloneDeep(INIT_FORM_DATA));
+    queryData();
   };
 
   const referrerList = ref([
