@@ -5,3 +5,7 @@ export interface TableDataReq {
   tableData: Record<string, any>;
   searchFormPayload: Record<string, any>;
 }
+
+export interface UseTableOptions {
+  queryTableData?: () => void;
+}

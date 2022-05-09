@@ -1,7 +1,8 @@
 import { reactive, ref, computed } from "vue";
 import { cloneDeep } from "lodash";
+import type { UseTableOptions } from "../dto.d";
 
-export const useRealTimeQuery = ({ queryTableData }: any) => {
+export const useRealTimeQuery = ({ queryTableData }: UseTableOptions) => {
   const INIT_FORM_DATA = {
     ip: "",
     referrer: "",
