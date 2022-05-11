@@ -6,14 +6,23 @@ import { BaseService } from './base.service';
 export class BaseController {
   constructor(readonly baseService: BaseService) {}
 
+  // 实时访客 - 访客列表 /base/access
   @Get('access')
   findAccess(@Res() res: Response, @Req() req: Request, @Query() query) {
     return this.baseService.findAccess(res, req, query);
   }
 
+  // 实时访客 - 访问路径 /base/accessPath
   @Get('accessPath')
   findAccessPath(@Res() res: Response, @Req() req: Request, @Query() query) {
     return this.baseService.findAccessPath(res, req, query);
+  }
+
+  // 网站概况 - 获取某个时间段（今天/昨天/最近7天等）的 PV、UV、IP 数
+  // base/overview/getUvPv
+  @Get('overview/getUvPv')
+  overviewGetUvPv(@Res() res: Response, @Req() req: Request, @Query() query) {
+    return this.baseService.overviewGetUvPv(res, req, query);
   }
 
   @Post('pageUnload')

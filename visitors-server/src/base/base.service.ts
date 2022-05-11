@@ -11,6 +11,7 @@ import * as iconvLite from 'iconv-lite';
 import { logger } from '../utils/logger';
 import { SITE_ID_CONFIG } from '../config/siteId';
 import { createHmac } from 'crypto';
+import { getTimeQuerySql, resServerError } from '../utils/utils';
 
 let baseRepositoryCopy = null;
 let httpServiceCopy = null;
@@ -31,6 +32,12 @@ export class BaseService {
     httpServiceCopy = httpService;
   }
 
+  /**
+   * @description 实时访客 - 访客列表
+   * @param res
+   * @param req
+   * @param query
+   */
   async findAccess(@Res() res: Response, @Req() req: Request, @Query() query) {
     log.info(query);
     console.log(query);
@@ -91,13 +98,7 @@ export class BaseService {
     }
     if (query.date) {
       const [startDate, endDate] = query.date.split(',');
-      // 某一天
-      if (startDate === endDate) {
-        queryRule += `and DATE_FORMAT(time, '%Y-%m-%d') = '${startDate}' `;
-      } else {
-        // 时间间隔
-        queryRule += `and DATE_FORMAT(time, '%Y-%m-%d') <= '${endDate}' and DATE_FORMAT(time, '%Y-%m-%d') >= '${startDate}' `;
-      }
+      queryRule += getTimeQuerySql(startDate, endDate);
     }
     queryRule = queryRule.trim();
 
@@ -125,27 +126,95 @@ export class BaseService {
     });
   }
 
+  /**
+   * @description 实时访客 - 访问路径
+   * @param res
+   * @param req
+   * @param query
+   */
   async findAccessPath(
     @Res() res: Response,
     @Req() req: Request,
     @Query() query,
   ) {
-    console.log('findAccessPath');
-    log.info(query);
-    const { pageIndex = 1, pageCount = 20, siteId, uuid } = query;
-    const skip = (pageIndex - 1) * pageCount;
-    const sql = `SELECT * from base where siteId = '${siteId}' and uuid = '${uuid}' ORDER BY time desc LIMIT ${skip},${pageCount}`;
-    const result: Base[] = await this.entityManager.query(sql);
-    console.log(sql);
-    log.info(result);
-    console.log(result);
-    res.status(HttpStatus.OK).json({
-      code: 0,
-      data: {
-        list: result,
-      },
-      msg: '请求成功!',
-    });
+    try {
+      console.log('findAccessPath');
+      log.info(query);
+      const { pageIndex = 1, pageCount = 20, siteId, uuid } = query;
+      const skip = (pageIndex - 1) * pageCount;
+      const sql = `SELECT * from base where siteId = '${siteId}' and uuid = '${uuid}' ORDER BY time desc LIMIT ${skip},${pageCount}`;
+      const result: Base[] = await this.entityManager.query(sql);
+      console.log(sql);
+      log.info(result);
+      console.log(result);
+      res.status(HttpStatus.OK).json({
+        code: 0,
+        data: {
+          list: result,
+        },
+        msg: '请求成功!',
+      });
+    } catch (err) {
+      resServerError(res, err);
+    }
+  }
+
+  /**
+   * @description 网站概况 - 获取某个时间段（今天/昨天/最近7天等）的 PV、UV、IP 数
+   * @param res
+   * @param req 入参：网站 siteId、开始时间 、结束时间 '2022-04-06'
+   * @param query
+   */
+  async overviewGetUvPv(
+    @Res() res: Response,
+    @Req() req: Request,
+    @Query() query,
+  ) {
+    try {
+      console.log('====> overviewGetUvPv');
+      log.info('=====> overviewGetUvPv');
+      const { siteId, startDate, endDate } = query;
+
+      // 参数校验
+      const isSiteIdFormatError =
+        /[^a-z0-9]/g.test(siteId) || !siteId || siteId.length !== 32;
+      if (isSiteIdFormatError) {
+        throw new Error('siteId 格式错误');
+      }
+
+      const dateSql = getTimeQuerySql(startDate, endDate);
+      const pvSql = `SELECT count(*) from base WHERE siteId = '${siteId}' ${dateSql}`;
+      const uvSql = `SELECT count(*) from base WHERE siteId = '${siteId}' ${dateSql} GROUP BY uuidUaIp`;
+      const ipSql = `SELECT count(*) from base WHERE siteId = '${siteId}' ${dateSql} GROUP BY ip`;
+      console.log(`${pvSql}\n${uvSql}\n${ipSql}`);
+      log.info(pvSql, uvSql, ipSql);
+      // 顺序执行
+      // const pvResult = await this.entityManager.query(pvSql);
+      // const uvResult = await this.entityManager.query(uvSql);
+      // const ipResult = await this.entityManager.query(ipSql);
+      // 并行
+      const [pvResult, uvResult, ipResult] = await Promise.all([
+        this.entityManager.query(pvSql),
+        this.entityManager.query(uvSql),
+        this.entityManager.query(ipSql),
+      ]);
+      const sqlLog = `result: ${pvResult[0]['count(*)']},${uvResult.length},${ipResult.length}`;
+      console.log(sqlLog);
+      log.info(sqlLog);
+      res.status(HttpStatus.OK).json({
+        code: 0,
+        data: {
+          pv: pvResult[0]['count(*)'] - 0,
+          uv: uvResult.length,
+          ip: ipResult.length,
+        },
+        msg: '请求成功!',
+      });
+    } catch (err) {
+      console.log(err);
+      log.error(err);
+      resServerError(res, err);
+    }
   }
 
   saveAccessData(@Res() res: Response) {
