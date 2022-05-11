@@ -64,7 +64,7 @@ const init = () => {
 
 const destroy = () => {
   // 销毁实例，防止 柱状图 动态切换到 饼图 时，柱状图部分属性依旧留存的问题
-  chart.value.dispose();
+  chart.value?.dispose();
   chart.value = null;
   props.autoResize && removeListener(zChart.value, __resizeHandler);
 };

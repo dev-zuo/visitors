@@ -13,13 +13,25 @@
           <td>今天</td>
           <td>{{ todayData.pv || 0 }}</td>
           <td>{{ todayData.uv || 0 }}</td>
-          <td>{{ todayData.ipCount || 0 }}</td>
+          <td>{{ todayData.ip || 0 }}</td>
         </tr>
         <tr>
           <td>昨日</td>
           <td>{{ yesterdayData.pv || 0 }}</td>
           <td>{{ yesterdayData.uv || 0 }}</td>
-          <td>{{ yesterdayData.ipCount || 0 }}</td>
+          <td>{{ yesterdayData.ip || 0 }}</td>
+        </tr>
+        <tr>
+          <td>最近7天</td>
+          <td>{{ weekData.pv || 0 }}</td>
+          <td>{{ weekData.uv || 0 }}</td>
+          <td>{{ weekData.ip || 0 }}</td>
+        </tr>
+        <tr>
+          <td>最近30天</td>
+          <td>{{ lastMonthDate.pv || 0 }}</td>
+          <td>{{ lastMonthDate.uv || 0 }}</td>
+          <td>{{ lastMonthDate.ip || 0 }}</td>
         </tr>
       </table>
     </div>
@@ -93,14 +105,20 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from "vue";
+import axios from "@/utils/axios";
+import { ref, reactive, onBeforeMount } from "vue";
 import type { summaryData } from "./dto.d";
 import { useRealTimeQuery } from "@/views/baseReport/accessAnalysis/composition/useRealTimeQuery";
 import dayjs from "dayjs";
 import ZChart from "@/components/z-chart/src/ZChart.vue";
+import { useGlobalStore } from "@/stores/global";
+import { ElMessage } from "element-plus";
 
-const todayData: summaryData = {};
-const yesterdayData: summaryData = {};
+const globalStore = useGlobalStore();
+const todayData: summaryData = reactive({});
+const yesterdayData: summaryData = reactive({});
+const weekData: summaryData = reactive({});
+const lastMonthDate: summaryData = reactive({});
 
 const timeType = ref("今天");
 const { fastDateOption } = useRealTimeQuery({});
@@ -130,6 +148,55 @@ const chartOptions = {
     },
   ],
 };
+
+const getUvPv = async (startDate: string, endDate: string, cb) => {
+  try {
+    const res = await axios.get("/base/overview/getUvPv", {
+      params: {
+        siteId: globalStore.siteId,
+        startDate,
+        endDate,
+      },
+    });
+    if (res.data.code === 0) {
+      let data = res.data.data;
+      // Object.assign(todayData, data);
+      console.log("data", data, todayData);
+      cb && cb(data);
+    } else {
+      ElMessage.error(res.data.msg);
+    }
+  } catch (e: any) {
+    ElMessage.error(e.message);
+  }
+};
+
+onBeforeMount(async () => {
+  const t = (date: Date) => dayjs(date).format("YYYY-MM-DD");
+  let dateInfoArr = [
+    { dateTypeIndex: 0, model: todayData },
+    { dateTypeIndex: 1, model: yesterdayData },
+    { dateTypeIndex: 2, model: weekData },
+    { dateTypeIndex: 3, model: lastMonthDate },
+  ];
+  dateInfoArr.forEach(({ dateTypeIndex, model }) => {
+    let [start, end] = fastDateOption[dateTypeIndex].value();
+    getUvPv(t(start), t(end), (data: any) => Object.assign(model, data));
+  });
+
+  // let [startToday, endToday] = fastDateOption[0].value(); // 今天
+  // let [startYes, endYes] = fastDateOption[1].value(); // 昨天
+  // let [startMon, endMon] = fastDateOption[3].value(); // 最近 30 天
+  // getUvPv(t(startToday), t(endToday), (data: any) =>
+  //   Object.assign(todayData, data)
+  // );
+  // getUvPv(t(startYes), t(endYes), (data: any) =>
+  //   Object.assign(yesterdayData, data)
+  // );
+  // getUvPv(t(startMon), t(endMon), (data: any) =>
+  //   Object.assign(lastMonthDate, data)
+  // );
+});
 </script>
 
 <style lang="scss" scoped>
